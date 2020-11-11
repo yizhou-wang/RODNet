@@ -9,11 +9,9 @@ dataset_cfg = dict(
             '2019_04_09_PMS1000_PL_NORMAL',
             '2019_04_09_PMS3001_PL_NORMAL',
             '2019_05_29_MLMS006_CR_BLUR',
-            '2019_05_29_PBMS007_PL_BLUR',
             '2019_09_29_ONRD001_CS_NORMAL',
             '2019_09_29_ONRD002_CS_NORMAL',
             '2019_09_29_ONRD004_HW_NORMAL',
-            '2019_10_13_ONRD048_CS_NIGHT'
         ],
     ),
     valid=dict(
@@ -21,7 +19,8 @@ dataset_cfg = dict(
     ),
     test=dict(
         seqs=[
-            '2019_04_09_BMS1000_PL_NORMAL',
+            '2019_05_29_PBMS007_PL_BLUR',
+            '2019_10_13_ONRD048_CS_NIGHT'
         ],
     ),
     demo=dict(
@@ -62,13 +61,13 @@ confmap_cfg = dict(
 )
 
 train_cfg = dict(
-    n_epoch=50,
+    n_epoch=10,
     batch_size=4,
     lr=0.00001,
     lr_step=5,  # lr will decrease 10 times after lr_step epoches
     win_size=16,
     train_step=1,
-    train_stride=8,
+    train_stride=16,
     log_step=100,
     save_step=1000,
 )
