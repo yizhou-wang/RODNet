@@ -36,6 +36,11 @@ python tools/train.py --config configs/<CONFIG_FILE> \
         --log_dir checkpoints/
 ```
 
+### Pretrained Models
+
+Please download the pretrained models from the list below:
+- [rodnet_cdc_win16_cruw_mini_epoch50.pkl](https://drive.google.com/file/d/19j-jy5wVOwYjUS5SPvoF-MjA06PepYnA/view?usp=sharing)
+
 ## Inference
 
 ```
