@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from torch.utils import data
 
-from .loaders import list_pkl_filenames
+from .loaders import list_pkl_filenames, list_pkl_filenames_from_prepared
 
 
 class CRDataset(data.Dataset):
@@ -61,7 +61,8 @@ class CRDataset(data.Dataset):
         if subset is not None:
             self.data_files = [subset + '.pkl']
         else:
-            self.data_files = list_pkl_filenames(config_dict['dataset_cfg'], split)
+            # self.data_files = list_pkl_filenames(config_dict['dataset_cfg'], split)
+            self.data_files = list_pkl_filenames_from_prepared(data_dir, split)
         self.seq_names = [name.split('.')[0] for name in self.data_files]
         self.n_seq = len(self.seq_names)
 
@@ -142,8 +143,15 @@ class CRDataset(data.Dataset):
                         data_dict['image_paths'].append(image_paths[frameid])
                 else:
                     raise TypeError
+            elif radar_configs['data_type'] == 'ROD2021':
+                radar_npy_win = np.zeros((self.win_size, ramap_rsize, ramap_asize, 2), dtype=np.float32)
+                chirp_id = 0  # only use chirp 0 for training
+                for idx, frameid in enumerate(
+                        range(data_id, data_id + self.win_size * self.step, self.step)):
+                    radar_npy_win[idx, :, :, :] = np.load(radar_paths[frameid][chirp_id])
+                    data_dict['image_paths'].append(image_paths[frameid])
             else:
-                raise ValueError
+                raise NotImplementedError
         except:
             # in case load npy fail
             data_dict['status'] = False
@@ -202,10 +210,3 @@ class CRDataset(data.Dataset):
             data_dict['anno'] = None
 
         return data_dict
-
-
-if __name__ == "__main__":
-    dataset = CRDataset('./data/data_details', stride=16)
-    print(len(dataset))
-    for i in range(len(dataset)):
-        continue

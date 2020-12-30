@@ -10,7 +10,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from cruw.cruw import CRUW
+from cruw import CRUW
 
 from rodnet.datasets.CRDataset import CRDataset
 from rodnet.datasets.CRDatasetSM import CRDatasetSM
@@ -37,16 +37,13 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     config_dict = load_configs_from_file(args.config)
-    dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'])
+    # dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'])
+    dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'], sensor_config_name='sensor_config_rod2021')
     radar_configs = dataset.sensor_cfg.radar_cfg
     range_grid = dataset.range_grid
     angle_grid = dataset.angle_grid
-    # config_dict['mappings'] = {}
-    # config_dict['mappings']['range_grid'] = range_grid.tolist()
-    # config_dict['mappings']['angle_grid'] = angle_grid.tolist()
 
     model_cfg = config_dict['model_cfg']
-
     if model_cfg['type'] == 'CDC':
         from rodnet.models import RODNetCDC as RODNet
     elif model_cfg['type'] == 'HG':
@@ -132,27 +129,16 @@ if __name__ == "__main__":
 
     print("Building model ... (%s)" % model_cfg)
     if model_cfg['type'] == 'CDC':
-        if 'mnet_cfg' in model_cfg:
-            rodnet = RODNet(n_class_train, mnet_cfg=model_cfg['mnet_cfg']).cuda()
-        else:
-            rodnet = RODNet(n_class_train).cuda()
+        rodnet = RODNet(n_class_train).cuda()
         criterion = nn.MSELoss()
     elif model_cfg['type'] == 'HG':
-        if 'mnet_cfg' in model_cfg:
-            rodnet = RODNet(n_class_train, stacked_num=stacked_num, mnet_cfg=model_cfg['mnet_cfg']).cuda()
-        else:
-            rodnet = RODNet(n_class_train, stacked_num=stacked_num).cuda()
+        rodnet = RODNet(n_class_train, stacked_num=stacked_num).cuda()
         criterion = nn.BCELoss()
     elif model_cfg['type'] == 'HGwI':
-        if 'mnet_cfg' in model_cfg:
-            rodnet = RODNet(n_class_train, stacked_num=stacked_num, mnet_cfg=model_cfg['mnet_cfg']).cuda()
-        else:
-            rodnet = RODNet(n_class_train, stacked_num=stacked_num).cuda()
+        rodnet = RODNet(n_class_train, stacked_num=stacked_num).cuda()
         criterion = nn.BCELoss()
     else:
         raise TypeError
-
-    # criterion = FocalLoss(focusing_param=8, balance_param=0.25)
     optimizer = optim.Adam(rodnet.parameters(), lr=lr)
     scheduler = StepLR(optimizer, step_size=config_dict['train_cfg']['lr_step'], gamma=0.1)
 
@@ -232,21 +218,13 @@ if __name__ == "__main__":
                 else:
                     chirp_amp_curr = chirp_amp(data.numpy()[0, :, 0, :, :], radar_configs['data_type'])
 
-                if True:
-                    # draw train images
-                    fig_name = os.path.join(train_viz_path,
-                                            '%03d_%010d_%06d.png' % (epoch + 1, iter_count, iter + 1))
-                    img_path = image_paths[0][0]
-                    visualize_train_img(fig_name, img_path, chirp_amp_curr,
-                                        confmap_pred[0, :n_class, 0, :, :],
-                                        confmap_gt[0, :n_class, 0, :, :])
-                else:
-                    writer.add_image('images/ramap', heatmap2rgb(chirp_amp_curr), iter_count)
-                    writer.add_image('images/confmap_pred', prob2image(confmap_pred[0, :, 0, :, :]), iter_count)
-                    writer.add_image('images/confmap_gt', prob2image(confmap_gt[0, :, 0, :, :]), iter_count)
-
-                    # TODO: combine three images together
-                    # writer.add_images('')
+                # draw train images
+                fig_name = os.path.join(train_viz_path,
+                                        '%03d_%010d_%06d.png' % (epoch + 1, iter_count, iter + 1))
+                img_path = image_paths[0][0]
+                visualize_train_img(fig_name, img_path, chirp_amp_curr,
+                                    confmap_pred[0, :n_class, 0, :, :],
+                                    confmap_gt[0, :n_class, 0, :, :])
 
             if (iter + 1) % config_dict['train_cfg']['save_step'] == 0:
                 # validate current model

@@ -6,7 +6,9 @@ import json
 import pickle
 import argparse
 
-from cruw.cruw import CRUW
+from cruw import CRUW
+from cruw.annotation.init_json import init_meta_json
+from cruw.mapping import ra2idx
 
 from rodnet.core.confidence_map import generate_confmap, normalize_confmap, add_noise_channel
 from rodnet.utils.load_configs import load_configs_from_file
@@ -27,6 +29,52 @@ def parse_args():
     return args
 
 
+def load_anno_txt(txt_path, n_frame, dataset):
+    folder_name_dict = dict(
+        cam_0='IMAGES_0',
+        rad_h='RADAR_RA_H'
+    )
+    anno_dict = init_meta_json(n_frame, folder_name_dict)
+    with open(txt_path, 'r') as f:
+        data = f.readlines()
+    for line in data:
+        frame_id, r, a, class_name = line.rstrip().split()
+        frame_id = int(frame_id)
+        r = float(r)
+        a = float(a)
+        rid, aid = ra2idx(r, a, dataset.range_grid, dataset.angle_grid)
+        anno_dict[frame_id]['rad_h']['n_objects'] += 1
+        anno_dict[frame_id]['rad_h']['obj_info']['categories'].append(class_name)
+        anno_dict[frame_id]['rad_h']['obj_info']['centers'].append([r, a])
+        anno_dict[frame_id]['rad_h']['obj_info']['center_ids'].append([rid, aid])
+        anno_dict[frame_id]['rad_h']['obj_info']['scores'].append(1.0)
+
+    return anno_dict
+
+
+def generate_confmaps(metadata_dict, n_class, viz):
+    confmaps = []
+    for metadata_frame in metadata_dict:
+        n_obj = metadata_frame['rad_h']['n_objects']
+        obj_info = metadata_frame['rad_h']['obj_info']
+        if n_obj == 0:
+            confmap_gt = np.zeros(
+                (n_class + 1, radar_configs['ramap_rsize'], radar_configs['ramap_asize']),
+                dtype=float)
+            confmap_gt[-1, :, :] = 1.0  # initialize noise channal
+        else:
+            confmap_gt = generate_confmap(n_obj, obj_info, dataset, config_dict)
+            confmap_gt = normalize_confmap(confmap_gt)
+            confmap_gt = add_noise_channel(confmap_gt, dataset, config_dict)
+        assert confmap_gt.shape == (
+            n_class + 1, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
+        if viz:
+            visualize_confmap(confmap_gt)
+        confmaps.append(confmap_gt)
+    confmaps = np.array(confmaps)
+    return confmaps
+
+
 def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, overwrite=False):
     """
     Prepare pickle data for RODNet training and testing
@@ -34,6 +82,7 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
     :param config_dict: rodnet configurations
     :param data_dir: output directory of the processed data
     :param split: train, valid, test, demo, etc.
+    :param save_dir: output directory of the prepared data
     :param viz: whether visualize the prepared data
     :param overwrite: whether overwrite the existing prepared data
     :return:
@@ -46,7 +95,10 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
     data_root = config_dict['dataset_cfg']['data_root']
     anno_root = config_dict['dataset_cfg']['anno_root']
     set_cfg = config_dict['dataset_cfg'][split]
-    sets_seqs = set_cfg['seqs']
+    if 'seqs' not in set_cfg:
+        sets_seqs = sorted(os.listdir(os.path.join(data_root, set_cfg['subdir'])))
+    else:
+        sets_seqs = set_cfg['seqs']
 
     if overwrite:
         if os.path.exists(os.path.join(data_dir, split)):
@@ -54,8 +106,8 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
         os.makedirs(os.path.join(data_dir, split))
 
     for seq in sets_seqs:
-        seq_path = os.path.join(data_root, seq)
-        seq_anno_path = os.path.join(anno_root, seq + '.json')
+        seq_path = os.path.join(data_root, set_cfg['subdir'], seq)
+        seq_anno_path = os.path.join(anno_root, set_cfg['subdir'], seq + config_dict['dataset_cfg']['anno_ext'])
         save_path = os.path.join(save_dir, seq + '.pkl')
         print("Sequence %s saving to %s" % (seq_path, save_path))
 
@@ -89,6 +141,16 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
                     for chirp_id in range(n_chirp):
                         frame_paths.append(radar_paths_chirp[chirp_id][frame_id])
                     radar_paths.append(frame_paths)
+            elif radar_configs['data_type'] == 'ROD2021':
+                assert len(os.listdir(radar_dir)) == n_frame * len(radar_configs['chirp_ids'])
+                radar_paths = []
+                for frame_id in range(n_frame):
+                    chirp_paths = []
+                    for chirp_id in radar_configs['chirp_ids']:
+                        path = os.path.join(radar_dir, '%06d_%04d.' % (frame_id, chirp_id) +
+                                            dataset.sensor_cfg.radar_cfg['ext'])
+                        chirp_paths.append(path)
+                    radar_paths.append(chirp_paths)
             else:
                 raise ValueError
 
@@ -107,35 +169,19 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
                 pickle.dump(data_dict, open(save_path, 'wb'))
                 continue
             else:
-                with open(os.path.join(seq_anno_path), 'r') as f:
-                    anno = json.load(f)
-
                 anno_obj = {}
-                anno_obj['metadata'] = anno['metadata']
-                anno_obj['confmaps'] = []
+                if config_dict['dataset_cfg']['anno_ext'] == '.txt':
+                    anno_obj['metadata'] = load_anno_txt(seq_anno_path, n_frame, dataset)
 
-                for metadata_frame in anno['metadata']:
-                    n_obj = metadata_frame['rad_h']['n_objects']
-                    obj_info = metadata_frame['rad_h']['obj_info']
-                    if n_obj == 0:
-                        confmap_gt = np.zeros(
-                            (n_class + 1, radar_configs['ramap_rsize'], radar_configs['ramap_asize']),
-                            dtype=float)
-                        confmap_gt[-1, :, :] = 1.0  # initialize noise channal
-                    else:
-                        confmap_gt = generate_confmap(n_obj, obj_info, dataset, config_dict)
-                        confmap_gt = normalize_confmap(confmap_gt)
-                        confmap_gt = add_noise_channel(confmap_gt, dataset, config_dict)
-                    assert confmap_gt.shape == (
-                        n_class + 1, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
-                    if viz:
-                        visualize_confmap(confmap_gt)
-                    anno_obj['confmaps'].append(confmap_gt)
-                    # end objects loop
+                elif config_dict['dataset_cfg']['anno_ext'] == '.json':
+                    with open(os.path.join(seq_anno_path), 'r') as f:
+                        anno = json.load(f)
+                    anno_obj['metadata'] = anno['metadata']
+                else:
+                    raise
 
-                anno_obj['confmaps'] = np.array(anno_obj['confmaps'])
+                anno_obj['confmaps'] = generate_confmaps(anno_obj['metadata'], n_class, viz)
                 data_dict['anno'] = anno_obj
-
                 # save pkl files
                 pickle.dump(data_dict, open(save_path, 'wb'))
             # end frames loop
@@ -151,7 +197,7 @@ if __name__ == "__main__":
     out_data_dir = args.out_data_dir
     overwrite = args.overwrite
 
-    dataset = CRUW(data_root=data_root)
+    dataset = CRUW(data_root=data_root, sensor_config_name='sensor_config_rod2021')
     config_dict = load_configs_from_file(args.config)
     radar_configs = dataset.sensor_cfg.radar_cfg
 
