@@ -10,7 +10,7 @@ conda activate rodnet
 
 Install pytorch.
 ```
-conda install pytorch torchvision cudatoolkit=10.0 -c pytorch
+conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
 ```
 
 Setup RODNet package.
@@ -35,11 +35,6 @@ python tools/train.py --config configs/<CONFIG_FILE> \
         --data_dir data/<DATA_FOLDER_NAME> \
         --log_dir checkpoints/
 ```
-
-### Pretrained Models
-
-Please download the pretrained models from the list below:
-- [rodnet_cdc_win16_cruw_mini_epoch50.pkl](https://drive.google.com/file/d/19j-jy5wVOwYjUS5SPvoF-MjA06PepYnA/view?usp=sharing)
 
 ## Inference
 
