@@ -1,29 +1,23 @@
 dataset_cfg = dict(
-    base_root="/mnt/disk2/CRUW/CRUW_MINI",
-    data_root="/mnt/disk2/CRUW/CRUW_MINI/sequences",
-    anno_root="/mnt/disk2/CRUW/CRUW_MINI/annotations",
+    dataset_name='ROD2021',
+    base_root="/mnt/disk1/CRUW/ROD2021",
+    data_root="/mnt/disk1/CRUW/ROD2021/sequences",
+    anno_root="/mnt/disk1/CRUW/ROD2021/annotations",
+    anno_ext='.txt',
     train=dict(
-        seqs=[
-            '2019_04_09_BMS1000_PL_NORMAL',
-            '2019_04_09_CMS1002_PL_NORMAL',
-            '2019_04_09_PMS1000_PL_NORMAL',
-            '2019_04_09_PMS3001_PL_NORMAL',
-            '2019_05_29_MLMS006_CR_BLUR',
-            '2019_09_29_ONRD001_CS_NORMAL',
-            '2019_09_29_ONRD002_CS_NORMAL',
-            '2019_09_29_ONRD004_HW_NORMAL',
-        ],
+        subdir='train',
+        # seqs=[],  # can choose from the subdir folder
     ),
     valid=dict(
+        subdir='valid',
         seqs=[],
     ),
     test=dict(
-        seqs=[
-            '2019_05_29_PBMS007_PL_BLUR',
-            '2019_10_13_ONRD048_CS_NIGHT'
-        ],
+        subdir='test',
+        # seqs=[],  # can choose from the subdir folder
     ),
     demo=dict(
+        subdir='demo',
         seqs=[],
     ),
 )
@@ -67,7 +61,7 @@ train_cfg = dict(
     lr_step=5,  # lr will decrease 10 times after lr_step epoches
     win_size=16,
     train_step=1,
-    train_stride=16,
+    train_stride=4,
     log_step=100,
     save_step=1000,
 )
