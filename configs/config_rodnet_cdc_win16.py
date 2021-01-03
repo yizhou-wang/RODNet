@@ -55,7 +55,7 @@ confmap_cfg = dict(
 )
 
 train_cfg = dict(
-    n_epoch=10,
+    n_epoch=100,
     batch_size=4,
     lr=0.00001,
     lr_step=5,  # lr will decrease 10 times after lr_step epoches
@@ -63,7 +63,7 @@ train_cfg = dict(
     train_step=1,
     train_stride=4,
     log_step=100,
-    save_step=1000,
+    save_step=10000,
 )
 test_cfg = dict(
     test_step=1,
