@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from cruw.cruw import CRUW
+from cruw import CRUW
 
 from rodnet.datasets.CRDataset import CRDataset
 from rodnet.datasets.collate_functions import cr_collate
@@ -43,13 +43,10 @@ if __name__ == "__main__":
     sybl = args.symbol
 
     config_dict = load_configs_from_file(args.config)
-    dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'])
+    dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'], sensor_config_name='sensor_config_rod2021')
     radar_configs = dataset.sensor_cfg.radar_cfg
     range_grid = dataset.range_grid
     angle_grid = dataset.angle_grid
-    # config_dict['mappings'] = {}
-    # config_dict['mappings']['range_grid'] = range_grid.tolist()
-    # config_dict['mappings']['angle_grid'] = angle_grid.tolist()
 
     model_configs = config_dict['model_cfg']
 
@@ -125,9 +122,9 @@ if __name__ == "__main__":
 
     data_root = dataset_configs['data_root']
     if not args.demo:
-        seq_names = dataset_configs['test']['seqs']
+        seq_names = sorted(os.listdir(os.path.join(data_root, dataset_configs['test']['subdir'])))
     else:
-        seq_names = dataset_configs['demo']['seqs']
+        seq_names = sorted(os.listdir(os.path.join(data_root, dataset_configs['demo']['subdir'])))
     print(seq_names)
 
     for seq_name in seq_names:
