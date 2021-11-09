@@ -5,6 +5,6 @@ Pillow
 scipy
 six
 tqdm
-tensorboard==2.3.0
+tensorboard>=2.3.0
 torch
 torchvision
