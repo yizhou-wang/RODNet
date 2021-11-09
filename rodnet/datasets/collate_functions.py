@@ -1,7 +1,12 @@
 import numpy as np
 import torch
 import re
-from torch._six import container_abcs, string_classes, int_classes
+try:
+    from torch._six import container_abcs, string_classes, int_classes
+except:
+    import collections.abc as container_abcs
+    string_classes = str
+    int_classes = int
 
 np_str_obj_array_pattern = re.compile(r'[SaUO]')
 default_collate_err_msg_format = (
