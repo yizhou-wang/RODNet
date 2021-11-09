@@ -28,6 +28,7 @@ Example:
 def parse_args():
     parser = argparse.ArgumentParser(description='Test RODNet.')
     parser.add_argument('--config', type=str, help='choose rodnet model configurations')
+    parser.add_argument('--sensor_config', type=str, default='sensor_config_rod2021')
     parser.add_argument('--data_dir', type=str, default='./data/', help='directory to the prepared data')
     parser.add_argument('--checkpoint', type=str, help='path to the saved trained model')
     parser.add_argument('--res_dir', type=str, default='./results/', help='directory to save testing results')
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     sybl = args.symbol
 
     config_dict = load_configs_from_file(args.config)
-    dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'], sensor_config_name='sensor_config_rod2021')
+    dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'], sensor_config_name=args.sensor_config)
     radar_configs = dataset.sensor_cfg.radar_cfg
     range_grid = dataset.range_grid
     angle_grid = dataset.angle_grid

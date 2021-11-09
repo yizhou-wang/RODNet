@@ -21,7 +21,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Prepare RODNet data.')
     parser.add_argument('--config', type=str, dest='config', help='configuration file path')
     parser.add_argument('--data_root', type=str, help='directory to the prepared data')
-    parser.add_argument('--sensor_config', type=str, default='sensor_config')
+    parser.add_argument('--sensor_config', type=str, default='sensor_config_rod2021')
     parser.add_argument('--split', type=str, dest='split', default='',
                         help='choose from train, valid, test, supertest')
     parser.add_argument('--out_data_dir', type=str, default='./data',
@@ -96,7 +96,7 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
 
     data_root = config_dict['dataset_cfg']['data_root']
     anno_root = config_dict['dataset_cfg']['anno_root']
-    if split == None:
+    if split is None:
         set_cfg = {
             'subdir': '',
             'seqs': sorted(os.listdir(data_root))
