@@ -207,6 +207,7 @@ if __name__ == "__main__":
     else:
         splits = args.split.split(',')
     out_data_dir = args.out_data_dir
+    os.makedirs(out_data_dir, exist_ok=True)
     overwrite = args.overwrite
 
     dataset = CRUW(data_root=data_root, sensor_config_name=args.sensor_config)
