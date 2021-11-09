@@ -202,7 +202,7 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
 if __name__ == "__main__":
     args = parse_args()
     data_root = args.data_root
-    if args.splits == '':
+    if args.split == '':
         splits = None
     else:
         splits = args.split.split(',')
