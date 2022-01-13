@@ -5,6 +5,8 @@ This is the official implementation of our RODNet paper at WACV 2021.
 [[Paper]](https://openaccess.thecvf.com/content/WACV2021/html/Wang_RODNet_Radar_Object_Detection_Using_Cross-Modal_Supervision_WACV_2021_paper.html)
 [[Dataset]](https://www.cruwdataset.org)
 
+![RODNet Overview](./assets/images/overview.jpg?raw=true)
+
 Please cite our WACV 2021 paper if this repository is helpful for your research:
 ```
 @inproceedings{wang2021rodnet,
