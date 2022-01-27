@@ -124,10 +124,15 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
             if not overwrite and os.path.exists(save_path):
                 print("%s already exists, skip" % save_path)
                 continue
+
             image_dir = os.path.join(seq_path, camera_configs['image_folder'])
-            image_paths = sorted([os.path.join(image_dir, name) for name in os.listdir(image_dir) if
-                                  name.endswith(camera_configs['ext'])])
-            n_frame = len(image_paths)
+            if os.path.exists(image_dir):
+                image_paths = sorted([os.path.join(image_dir, name) for name in os.listdir(image_dir) if
+                                      name.endswith(camera_configs['ext'])])
+                n_frame = len(image_paths)
+            else:  # camera images are not available
+                image_paths = None
+                n_frame = None
 
             radar_dir = os.path.join(seq_path, dataset.sensor_cfg.radar_cfg['chirp_folder'])
             if radar_configs['data_type'] == 'RI' or radar_configs['data_type'] == 'AP':
@@ -151,7 +156,10 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
                         frame_paths.append(radar_paths_chirp[chirp_id][frame_id])
                     radar_paths.append(frame_paths)
             elif radar_configs['data_type'] == 'ROD2021':
-                assert len(os.listdir(radar_dir)) == n_frame * len(radar_configs['chirp_ids'])
+                if n_frame is not None:
+                    assert len(os.listdir(radar_dir)) == n_frame * len(radar_configs['chirp_ids'])
+                else:  # camera images are not available
+                    n_frame = int(len(os.listdir(radar_dir)) / len(radar_configs['chirp_ids']))
                 radar_paths = []
                 for frame_id in range(n_frame):
                     chirp_paths = []
@@ -173,7 +181,7 @@ def prepare_data(dataset, config_dict, data_dir, split, save_dir, viz=False, ove
                 anno=None,
             )
 
-            if split == 'demo':
+            if split == 'demo' or not os.path.exists(seq_anno_path):
                 # no labels need to be saved
                 pickle.dump(data_dict, open(save_path, 'wb'))
                 continue
