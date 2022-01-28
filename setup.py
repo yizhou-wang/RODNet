@@ -44,7 +44,7 @@ def make_cuda_ext(name, module, sources):
 if __name__ == '__main__':
     setup(
         name='rodnet',
-        version='1.0',
+        version='1.1',
         description='RODNet: Object Detection from Radar Data',
         long_description=readme(),
         long_description_content_type='text/markdown',
@@ -77,7 +77,39 @@ if __name__ == '__main__':
         keywords='rodnet, object detection, radar, autonomous driving',
 
         packages=find_packages(include=["rodnet.*"]),
+        package_data={'rodnet.ops': ['*/*.so']},
         python_requires='>=3.6',
         install_requires=get_requirements(),
+        ext_modules=[
+            make_cuda_ext(
+                name='deform_conv_2d_cuda',
+                module='rodnet.ops.dcn',
+                sources=[
+                    'src/deform_conv_2d_cuda.cpp',
+                    'src/deform_conv_2d_cuda_kernel.cu'
+                ]),
+            make_cuda_ext(
+                name='deform_conv_3d_cuda',
+                module='rodnet.ops.dcn',
+                sources=[
+                    'src/deform_conv_3d_cuda.cpp',
+                    'src/deform_conv_3d_cuda_kernel.cu'
+                ]),
+            make_cuda_ext(
+                name='deform_pool_2d_cuda',
+                module='rodnet.ops.dcn',
+                sources=[
+                    'src/deform_pool_2d_cuda.cpp',
+                    'src/deform_pool_2d_cuda_kernel.cu'
+                ]),
+            make_cuda_ext(
+                name='deform_pool_3d_cuda',
+                module='rodnet.ops.dcn',
+                sources=[
+                    'src/deform_pool_3d_cuda.cpp',
+                    'src/deform_pool_3d_cuda_kernel.cu'
+                ]),
+        ],
+        cmdclass={'build_ext': BuildExtension},
         zip_safe=False
     )
