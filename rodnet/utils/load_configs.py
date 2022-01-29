@@ -18,3 +18,13 @@ def load_configs_from_file(config_path):
         if not name.startswith('__')
     }
     return cfg_dict
+
+
+def update_config_dict(config_dict, args):
+    data_root_old = config_dict['dataset_cfg']['base_root']
+    config_dict['dataset_cfg']['base_root'] = args.data_root
+    config_dict['dataset_cfg']['data_root'] = config_dict['dataset_cfg']['data_root'].replace(data_root_old,
+                                                                                              args.data_root)
+    config_dict['dataset_cfg']['anno_root'] = config_dict['dataset_cfg']['anno_root'].replace(data_root_old,
+                                                                                              args.data_root)
+    return config_dict

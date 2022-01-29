@@ -8,7 +8,7 @@ from tqdm import tqdm
 from torch.utils import data
 
 from .collate_functions import _cr_collate_npy
-from .loaders import list_pkl_filenames
+from .loaders import list_pkl_filenames, list_pkl_filenames_from_prepared
 
 
 class CRDatasetSM(data.Dataset):
@@ -24,11 +24,12 @@ class CRDatasetSM(data.Dataset):
     :param is_random: random load or not
     """
 
-    def __init__(self, data_root, config_dict, split, is_random=True, subset=None, noise_channel=False):
+    def __init__(self, data_dir, dataset, config_dict, split, is_random=True, subset=None, noise_channel=False):
         # parameters settings
-        self.data_root = data_root
+        self.data_dir = data_dir
+        self.dataset = dataset
         self.config_dict = config_dict
-        self.n_class = config_dict['class_cfg']['n_class']
+        self.n_class = dataset.object_cfg.n_class
         self.win_size = config_dict['train_cfg']['win_size']
         self.split = split
         if split == 'train' or split == 'valid':
@@ -45,10 +46,7 @@ class CRDatasetSM(data.Dataset):
         if 'mnet_cfg' in self.config_dict['model_cfg']:
             in_chirps, out_channels = self.config_dict['model_cfg']['mnet_cfg']
             self.n_chirps = in_chirps
-            n_radar_chirps = self.config_dict['dataset_cfg']['radar_cfg']['n_chirps']
-            self.chirp_ids = []
-            for c in range(in_chirps):
-                self.chirp_ids.append(int(n_radar_chirps / in_chirps * c))
+        self.chirp_ids = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
 
         # dataset initialization
         self.image_paths = []
@@ -60,12 +58,13 @@ class CRDatasetSM(data.Dataset):
         if subset is not None:
             self.data_files = [subset + '.pkl']
         else:
-            self.data_files = list_pkl_filenames(config_dict['dataset_cfg'], split)
+            # self.data_files = list_pkl_filenames(config_dict['dataset_cfg'], split)
+            self.data_files = list_pkl_filenames_from_prepared(data_dir, split)
         self.seq_names = [name.split('.')[0] for name in self.data_files]
         self.n_seq = len(self.seq_names)
 
         for seq_id, data_file in enumerate(tqdm(self.data_files)):
-            data_file_path = os.path.join(data_root, split, data_file)
+            data_file_path = os.path.join(data_dir, split, data_file)
             data_details = pickle.load(open(data_file_path, 'rb'))
             if split == 'train' or split == 'valid':
                 assert data_details['anno'] is not None
@@ -78,7 +77,7 @@ class CRDatasetSM(data.Dataset):
             for data_id in range(n_data_in_seq):
                 self.index_mapping.append([seq_id, data_id * self.stride])
             if data_details['anno'] is not None:
-                self.obj_infos.append(data_details['anno']['obj_infos'])
+                self.obj_infos.append(data_details['anno']['metadata'])
 
     def __len__(self):
         """Total number of data/label pairs"""
@@ -89,10 +88,10 @@ class CRDatasetSM(data.Dataset):
         seq_id, data_id = self.index_mapping[index]
         image_paths = self.image_paths[seq_id]
         radar_paths = self.radar_paths[seq_id]
-        this_data_file = os.path.join(self.data_root, self.split, self.data_files[seq_id])
+        this_data_file = os.path.join(self.data_dir, self.split, self.data_files[seq_id])
         this_data_details = pickle.load(open(this_data_file, 'rb'))
         if this_data_details['anno'] is not None:
-            this_seq_obj_info = this_data_details['anno']['obj_infos']
+            this_seq_obj_info = this_data_details['anno']['metadata']
             this_seq_confmap = this_data_details['anno']['confmaps']
 
         data_dict = dict(
@@ -101,7 +100,7 @@ class CRDatasetSM(data.Dataset):
         )
 
         if self.is_random:
-            chirp_id = random.randint(0, self.config_dict['dataset_cfg']['radar_cfg']['n_chirps'] - 1)
+            chirp_id = random.randint(0, len(self.chirp_ids) - 1)
         else:
             chirp_id = 0
 
@@ -109,7 +108,7 @@ class CRDatasetSM(data.Dataset):
         if 'mnet_cfg' in self.config_dict['model_cfg']:
             chirp_id = self.chirp_ids
 
-        radar_configs = self.config_dict['dataset_cfg']['radar_cfg']
+        radar_configs = self.dataset.sensor_cfg.radar_cfg
         ramap_rsize = radar_configs['ramap_rsize']
         ramap_asize = radar_configs['ramap_asize']
 
@@ -139,6 +138,24 @@ class CRDatasetSM(data.Dataset):
                         data_dict['image_paths'].append(image_paths[frameid])
                 else:
                     raise TypeError
+            elif radar_configs['data_type'] == 'ROD2021':
+                if isinstance(chirp_id, int):
+                    radar_npy_win = np.zeros((self.win_size, ramap_rsize, ramap_asize, 2), dtype=np.float32)
+                    for idx, frameid in enumerate(
+                            range(data_id, data_id + self.win_size * self.step, self.step)):
+                        radar_npy_win[idx, :, :, :] = np.load(radar_paths[frameid][chirp_id])
+                        data_dict['image_paths'].append(image_paths[frameid])
+                elif isinstance(chirp_id, list):
+                    radar_npy_win = np.zeros((self.win_size, self.n_chirps, ramap_rsize, ramap_asize, 2),
+                                             dtype=np.float32)
+                    for idx, frameid in enumerate(
+                            range(data_id, data_id + self.win_size * self.step, self.step)):
+                        for cid, c in enumerate(chirp_id):
+                            npy_path = radar_paths[frameid][cid]
+                            radar_npy_win[idx, cid, :, :, :] = np.load(npy_path)
+                        data_dict['image_paths'].append(image_paths[frameid])
+                else:
+                    raise TypeError
             else:
                 raise ValueError
 
@@ -151,31 +168,13 @@ class CRDatasetSM(data.Dataset):
             with open(os.path.join('./tmp', log_name), 'w') as f_log:
                 f_log.write('npy path: ' + radar_paths[frameid][chirp_id] + \
                             '\nframe indices: %d:%d:%d' % (data_id, data_id + self.win_size * self.step, self.step))
-            # if 'mnet_cfg' in self.config_dict['model_cfg']:
-            #     radar_npy_win = np.transpose(radar_npy_win, (4, 0, 1, 2, 3))
-            # else:
-            #     radar_npy_win = np.transpose(radar_npy_win, (3, 0, 1, 2))
-            #
-            # data_dict['radar_data'] = radar_npy_win
-            #
-            # if len(self.confmaps) != 0:
-            #     confmap_gt = this_seq_confmap[data_id:data_id + self.win_size * self.step:self.step]
-            #     confmap_gt = np.transpose(confmap_gt, (1, 0, 2, 3))
-            #     obj_info = this_seq_obj_info[data_id:data_id + self.win_size * self.step:self.step]
-            #
-            #     data_dict['anno'] = dict(
-            #         obj_infos=obj_info,
-            #         confmaps=confmap_gt,
-            #     )
-            # else:
-            #     data_dict['anno'] = None
             return data_dict
 
         # Dataloader for MNet
         if 'mnet_cfg' in self.config_dict['model_cfg']:
             radar_npy_win = np.transpose(radar_npy_win, (4, 0, 1, 2, 3))
             assert radar_npy_win.shape == (
-            2, self.win_size, self.n_chirps, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
+                2, self.win_size, self.n_chirps, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
         else:
             radar_npy_win = np.transpose(radar_npy_win, (3, 0, 1, 2))
             assert radar_npy_win.shape == (2, self.win_size, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])

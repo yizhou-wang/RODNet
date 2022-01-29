@@ -11,7 +11,7 @@ from cruw.annotation.init_json import init_meta_json
 from cruw.mapping import ra2idx
 
 from rodnet.core.confidence_map import generate_confmap, normalize_confmap, add_noise_channel
-from rodnet.utils.load_configs import load_configs_from_file
+from rodnet.utils.load_configs import load_configs_from_file, update_config_dict
 from rodnet.utils.visualization import visualize_confmap
 
 SPLITS_LIST = ['train', 'valid', 'test', 'demo']
@@ -20,7 +20,8 @@ SPLITS_LIST = ['train', 'valid', 'test', 'demo']
 def parse_args():
     parser = argparse.ArgumentParser(description='Prepare RODNet data.')
     parser.add_argument('--config', type=str, dest='config', help='configuration file path')
-    parser.add_argument('--data_root', type=str, help='directory to the prepared data')
+    parser.add_argument('--data_root', type=str,
+                        help='directory to the dataset (will overwrite data_root in config file)')
     parser.add_argument('--sensor_config', type=str, default='sensor_config_rod2021')
     parser.add_argument('--split', type=str, dest='split', default='',
                         help='choose from train, valid, test, supertest')
@@ -220,6 +221,7 @@ if __name__ == "__main__":
 
     dataset = CRUW(data_root=data_root, sensor_config_name=args.sensor_config)
     config_dict = load_configs_from_file(args.config)
+    config_dict = update_config_dict(config_dict, args)  # update configs by args
     radar_configs = dataset.sensor_cfg.radar_cfg
 
     if splits == None:
