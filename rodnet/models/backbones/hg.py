@@ -3,11 +3,16 @@ import torch.nn as nn
 
 class RadarStackedHourglass(nn.Module):
 
-    def __init__(self, n_class, stacked_num=1, in_channels=2):
+    def __init__(self, in_channels, n_class, stacked_num=1, conv_op=None, use_mse_loss=False):
         super(RadarStackedHourglass, self).__init__()
         self.stacked_num = stacked_num
-        self.conv1a = nn.Conv3d(in_channels=in_channels, out_channels=32,
-                                kernel_size=(9, 5, 5), stride=(1, 1, 1), padding=(4, 2, 2))
+        if conv_op is None:
+            self.conv1a = nn.Conv3d(in_channels=in_channels, out_channels=32,
+                                    kernel_size=(9, 5, 5), stride=(1, 1, 1), padding=(4, 2, 2))
+        else:
+            self.conv1a = conv_op(in_channels=in_channels, out_channels=32,
+                                  kernel_size=(5, 3, 3), stride=(1, 1, 1), padding=(2, 1, 1))
+
         self.conv1b = nn.Conv3d(in_channels=32, out_channels=64,
                                 kernel_size=(9, 5, 5), stride=(1, 1, 1), padding=(4, 2, 2))
 
@@ -25,6 +30,7 @@ class RadarStackedHourglass(nn.Module):
         self.bn1a = nn.BatchNorm3d(num_features=32)
         self.bn1b = nn.BatchNorm3d(num_features=64)
         self.sigmoid = nn.Sigmoid()
+        self.use_mse_loss = use_mse_loss
 
     def forward(self, x):
         x = self.relu(self.bn1a(self.conv1a(x)))
@@ -35,11 +41,12 @@ class RadarStackedHourglass(nn.Module):
             x, x1, x2, x3 = self.hourglass[i][0](x)
             x = self.hourglass[i][1](x, x1, x2, x3)
             confmap = self.hourglass[i][2](x)
-            out.append(self.sigmoid(confmap))
+            if not self.use_mse_loss:
+                confmap = self.sigmoid(confmap)
+            out.append(confmap)
             if i < self.stacked_num - 1:
                 confmap_ = self.hourglass[i][3](confmap)
                 x = x + confmap_
-
         return out
 
 

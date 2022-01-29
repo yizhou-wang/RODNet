@@ -18,7 +18,7 @@ from rodnet.datasets.CRDataLoader import CRDataLoader
 from rodnet.datasets.collate_functions import cr_collate
 from rodnet.core.radar_processing import chirp_amp
 from rodnet.utils.solve_dir import create_dir_for_new_model
-from rodnet.utils.load_configs import load_configs_from_file
+from rodnet.utils.load_configs import load_configs_from_file, update_config_dict
 from rodnet.utils.visualization import visualize_train_img
 
 
@@ -51,6 +51,12 @@ if __name__ == "__main__":
         from rodnet.models import RODNetHG as RODNet
     elif model_cfg['type'] == 'HGwI':
         from rodnet.models import RODNetHGwI as RODNet
+    elif model_cfg['type'] == 'CDCv2':
+        from rodnet.models import RODNetCDCDCN as RODNet
+    elif model_cfg['type'] == 'HGv2':
+        from rodnet.models import RODNetHGDCN as RODNet
+    elif model_cfg['type'] == 'HGwIv2':
+        from rodnet.models import RODNetHGwIDCN as RODNet
     else:
         raise NotImplementedError
 
@@ -110,7 +116,7 @@ if __name__ == "__main__":
         # dataloader_valid = DataLoader(crdata_valid, batch_size=batch_size, shuffle=True, num_workers=0)
 
     else:
-        crdata_train = CRDatasetSM(data_root=args.data_dir, config_dict=config_dict, split='train',
+        crdata_train = CRDatasetSM(data_dir=args.data_dir, dataset=dataset, config_dict=config_dict, split='train',
                                    noise_channel=args.use_noise_channel)
         seq_names = crdata_train.seq_names
         index_mapping = crdata_train.index_mapping
@@ -130,13 +136,31 @@ if __name__ == "__main__":
 
     print("Building model ... (%s)" % model_cfg)
     if model_cfg['type'] == 'CDC':
-        rodnet = RODNet(n_class_train).cuda()
-        criterion = nn.MSELoss()
+        rodnet = RODNet(in_channels=2, n_class=n_class_train).cuda()
+        criterion = nn.BCELoss()
     elif model_cfg['type'] == 'HG':
-        rodnet = RODNet(n_class_train, stacked_num=stacked_num).cuda()
+        rodnet = RODNet(in_channels=2, n_class=n_class_train, stacked_num=stacked_num).cuda()
         criterion = nn.BCELoss()
     elif model_cfg['type'] == 'HGwI':
-        rodnet = RODNet(n_class_train, stacked_num=stacked_num).cuda()
+        rodnet = RODNet(in_channels=2, n_class=n_class_train, stacked_num=stacked_num).cuda()
+        criterion = nn.BCELoss()
+    elif model_cfg['type'] == 'CDCv2':
+        in_chirps = len(radar_configs['chirp_ids'])
+        rodnet = RODNet(in_channels=in_chirps, n_class=n_class_train,
+                        mnet_cfg=config_dict['model_cfg']['mnet_cfg'],
+                        dcn=config_dict['model_cfg']['dcn']).cuda()
+        criterion = nn.BCELoss()
+    elif model_cfg['type'] == 'HGv2':
+        in_chirps = len(radar_configs['chirp_ids'])
+        rodnet = RODNet(in_channels=in_chirps, n_class=n_class_train, stacked_num=stacked_num,
+                        mnet_cfg=config_dict['model_cfg']['mnet_cfg'],
+                        dcn=config_dict['model_cfg']['dcn']).cuda()
+        criterion = nn.BCELoss()
+    elif model_cfg['type'] == 'HGwIv2':
+        in_chirps = len(radar_configs['chirp_ids'])
+        rodnet = RODNet(in_channels=in_chirps, n_class=n_class_train, stacked_num=stacked_num,
+                        mnet_cfg=config_dict['model_cfg']['mnet_cfg'],
+                        dcn=config_dict['model_cfg']['dcn']).cuda()
         criterion = nn.BCELoss()
     else:
         raise TypeError

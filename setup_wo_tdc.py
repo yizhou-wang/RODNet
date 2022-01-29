@@ -78,39 +78,39 @@ if __name__ == '__main__':
         keywords='rodnet, object detection, radar, autonomous driving',
 
         packages=find_packages(include=["rodnet.*"]),
-        package_data={'rodnet.ops': ['*/*.so']},
+        # package_data={'rodnet.ops': ['*/*.so']},
         python_requires='>=3.6',
         install_requires=get_requirements(),
-        ext_modules=[
-            make_cuda_ext(
-                name='deform_conv_2d_cuda',
-                module='rodnet.ops.dcn',
-                sources=[
-                    'src/deform_conv_2d_cuda.cpp',
-                    'src/deform_conv_2d_cuda_kernel.cu'
-                ]),
-            make_cuda_ext(
-                name='deform_conv_3d_cuda',
-                module='rodnet.ops.dcn',
-                sources=[
-                    'src/deform_conv_3d_cuda.cpp',
-                    'src/deform_conv_3d_cuda_kernel.cu'
-                ]),
-            make_cuda_ext(
-                name='deform_pool_2d_cuda',
-                module='rodnet.ops.dcn',
-                sources=[
-                    'src/deform_pool_2d_cuda.cpp',
-                    'src/deform_pool_2d_cuda_kernel.cu'
-                ]),
-            make_cuda_ext(
-                name='deform_pool_3d_cuda',
-                module='rodnet.ops.dcn',
-                sources=[
-                    'src/deform_pool_3d_cuda.cpp',
-                    'src/deform_pool_3d_cuda_kernel.cu'
-                ]),
-        ],
-        cmdclass={'build_ext': BuildExtension},
+        # ext_modules=[
+        #     make_cuda_ext(
+        #         name='deform_conv_2d_cuda',
+        #         module='rodnet.ops.dcn',
+        #         sources=[
+        #             'src/deform_conv_2d_cuda.cpp',
+        #             'src/deform_conv_2d_cuda_kernel.cu'
+        #         ]),
+        #     make_cuda_ext(
+        #         name='deform_conv_3d_cuda',
+        #         module='rodnet.ops.dcn',
+        #         sources=[
+        #             'src/deform_conv_3d_cuda.cpp',
+        #             'src/deform_conv_3d_cuda_kernel.cu'
+        #         ]),
+        #     make_cuda_ext(
+        #         name='deform_pool_2d_cuda',
+        #         module='rodnet.ops.dcn',
+        #         sources=[
+        #             'src/deform_pool_2d_cuda.cpp',
+        #             'src/deform_pool_2d_cuda_kernel.cu'
+        #         ]),
+        #     make_cuda_ext(
+        #         name='deform_pool_3d_cuda',
+        #         module='rodnet.ops.dcn',
+        #         sources=[
+        #             'src/deform_pool_3d_cuda.cpp',
+        #             'src/deform_pool_3d_cuda_kernel.cu'
+        #         ]),
+        # ],
+        # cmdclass={'build_ext': BuildExtension},
         zip_safe=False
     )

@@ -5,14 +5,14 @@ import torch
 from multiprocessing import Array, Process
 
 
-class CRDataLoader():
+class CRDataLoader:
     def __init__(self, dataset, shuffle=False, num_parallel_batch=2, noise_channel=False):
         # parameters settings
         self.dataset = dataset
         self.config_dict = self.dataset.config_dict
-        self.n_class = self.config_dict['class_cfg']['n_class']
+        self.n_class = dataset.dataset.object_cfg.n_class
         self.batch_size = self.config_dict['train_cfg']['batch_size']
-        self.radar_configs = self.config_dict['dataset_cfg']['radar_cfg']
+        self.radar_configs = self.dataset.dataset.sensor_cfg.radar_cfg
         self.model_configs = self.config_dict['model_cfg']
         self.ramap_rsize = self.radar_configs['ramap_rsize']
         self.ramap_asize = self.radar_configs['ramap_asize']

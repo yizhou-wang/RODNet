@@ -45,10 +45,7 @@ class CRDataset(data.Dataset):
         if 'mnet_cfg' in self.config_dict['model_cfg']:
             in_chirps, out_channels = self.config_dict['model_cfg']['mnet_cfg']
             self.n_chirps = in_chirps
-            n_radar_chirps = self.config_dict['dataset_cfg']['radar_cfg']['n_chirps']
-            self.chirp_ids = []
-            for c in range(in_chirps):
-                self.chirp_ids.append(int(n_radar_chirps / in_chirps * c))
+        self.chirp_ids = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
 
         # dataset initialization
         self.image_paths = []
@@ -105,7 +102,7 @@ class CRDataset(data.Dataset):
         )
 
         if self.is_random_chirp:
-            chirp_id = random.randint(0, self.dataset.sensor_cfg.radar_cfg['n_chirps'] - 1)
+            chirp_id = random.randint(0, len(self.chirp_ids) - 1)
         else:
             chirp_id = 0
 
@@ -144,12 +141,23 @@ class CRDataset(data.Dataset):
                 else:
                     raise TypeError
             elif radar_configs['data_type'] == 'ROD2021':
-                radar_npy_win = np.zeros((self.win_size, ramap_rsize, ramap_asize, 2), dtype=np.float32)
-                chirp_id = 0  # only use chirp 0 for training
-                for idx, frameid in enumerate(
-                        range(data_id, data_id + self.win_size * self.step, self.step)):
-                    radar_npy_win[idx, :, :, :] = np.load(radar_paths[frameid][chirp_id])
-                    data_dict['image_paths'].append(image_paths[frameid])
+                if isinstance(chirp_id, int):
+                    radar_npy_win = np.zeros((self.win_size, ramap_rsize, ramap_asize, 2), dtype=np.float32)
+                    for idx, frameid in enumerate(
+                            range(data_id, data_id + self.win_size * self.step, self.step)):
+                        radar_npy_win[idx, :, :, :] = np.load(radar_paths[frameid][chirp_id])
+                        data_dict['image_paths'].append(image_paths[frameid])
+                elif isinstance(chirp_id, list):
+                    radar_npy_win = np.zeros((self.win_size, self.n_chirps, ramap_rsize, ramap_asize, 2),
+                                             dtype=np.float32)
+                    for idx, frameid in enumerate(
+                            range(data_id, data_id + self.win_size * self.step, self.step)):
+                        for cid, c in enumerate(chirp_id):
+                            npy_path = radar_paths[frameid][cid]
+                            radar_npy_win[idx, cid, :, :, :] = np.load(npy_path)
+                        data_dict['image_paths'].append(image_paths[frameid])
+                else:
+                    raise TypeError
             else:
                 raise NotImplementedError
         except:
@@ -161,21 +169,6 @@ class CRDataset(data.Dataset):
             with open(os.path.join('./tmp', log_name), 'w') as f_log:
                 f_log.write('npy path: ' + radar_paths[frameid][chirp_id] + \
                             '\nframe indices: %d:%d:%d' % (data_id, data_id + self.win_size * self.step, self.step))
-            # radar_npy_win = np.transpose(radar_npy_win, (3, 0, 1, 2))
-            #
-            # data_dict['radar_data'] = radar_npy_win
-            #
-            # if len(self.confmaps) != 0:
-            #     confmap_gt = this_seq_confmap[data_id:data_id + self.win_size * self.step:self.step]
-            #     confmap_gt = np.transpose(confmap_gt, (1, 0, 2, 3))
-            #     obj_info = this_seq_obj_info[data_id:data_id + self.win_size * self.step:self.step]
-            #
-            #     data_dict['anno'] = dict(
-            #         obj_infos=obj_info,
-            #         confmaps=confmap_gt,
-            #     )
-            # else:
-            #     data_dict['anno'] = None
             return data_dict
 
         # Dataloader for MNet

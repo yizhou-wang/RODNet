@@ -1,6 +1,23 @@
 import torch.nn as nn
 
 
+class RadarVanilla(nn.Module):
+
+    def __init__(self, in_channels, n_class, use_mse_loss=False):
+        super(RadarVanilla, self).__init__()
+        self.encoder = RODEncode(in_channels=in_channels)
+        self.decoder = RODDecode(n_class=n_class)
+        self.sigmoid = nn.Sigmoid()
+        self.use_mse_loss = use_mse_loss
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        if not self.use_mse_loss:
+            x = self.sigmoid(x)
+        return x
+
+
 class RODEncode(nn.Module):
 
     def __init__(self, in_channels=2):
@@ -32,7 +49,6 @@ class RODEncode(nn.Module):
         x = self.relu(self.bn2b(self.conv2b(x)))  # (B, 128, W/2, 64, 64) -> (B, 128, W/4, 32, 32)
         x = self.relu(self.bn3a(self.conv3a(x)))  # (B, 128, W/4, 32, 32) -> (B, 256, W/4, 32, 32)
         x = self.relu(self.bn3b(self.conv3b(x)))  # (B, 256, W/4, 32, 32) -> (B, 256, W/4, 16, 16)
-
         return x
 
 
