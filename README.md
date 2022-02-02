@@ -72,6 +72,40 @@ This should allow you to use the latest cuda and pytorch version.
 
 ## Prepare data for RODNet
 
+Download [ROD2021 dataset](https://www.cruwdataset.org/download#h.mxc4upuvacso). 
+Follow [this script](https://github.com/yizhou-wang/RODNet/blob/master/tools/prepare_dataset/reorganize_rod2021.sh) to reorganize files as below.
+
+```
+data_root
+  - sequences
+  | - train
+  | | - <SEQ_NAME>
+  | | | - IMAGES_0
+  | | | | - <FRAME_ID>.jpg
+  | | | | - ***.jpg
+  | | | - RADAR_RA_H
+  | | |   - <FRAME_ID>_<CHIRP_ID>.npy
+  | | |   - ***.npy
+  | | - ***
+  | | 
+  | - test
+  |   - <SEQ_NAME>
+  |   | - RADAR_RA_H
+  |   |   - <FRAME_ID>_<CHIRP_ID>.npy
+  |   |   - ***.npy
+  |   - ***
+  | 
+  - annotations
+  | - train
+  | | - <SEQ_NAME>.txt
+  | | - ***.txt
+  | - test
+  |   - <SEQ_NAME>.txt
+  |   - ***.txt
+  - calib
+```
+
+Convert data and annotations to `.pkl` files.
 ```commandline
 python tools/prepare_dataset/prepare_data.py \
         --config configs/<CONFIG_FILE> \

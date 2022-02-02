@@ -3,6 +3,7 @@ unzip TRAIN_RAD_H.zip
 unzip TRAIN_CAM_0.zip
 unzip TEST_RAD_H.zip
 unzip TRAIN_RAD_H_ANNO.zip
+unzip CAM_CALIB.zip
 
 # make folders for data and annotations
 mkdir sequences
