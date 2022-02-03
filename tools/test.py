@@ -1,7 +1,6 @@
 import os
 import time
 import argparse
-import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
@@ -15,7 +14,7 @@ from rodnet.core.post_processing import write_dets_results, write_dets_results_s
 from rodnet.core.post_processing import ConfmapStack
 from rodnet.core.radar_processing import chirp_amp
 from rodnet.utils.visualization import visualize_test_img, visualize_test_img_wo_gt
-from rodnet.utils.load_configs import load_configs_from_file
+from rodnet.utils.load_configs import load_configs_from_file, parse_cfgs, update_config_dict
 from rodnet.utils.solve_dir import create_random_model_name
 
 """
@@ -27,6 +26,7 @@ Example:
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test RODNet.')
+
     parser.add_argument('--config', type=str, help='choose rodnet model configurations')
     parser.add_argument('--sensor_config', type=str, default='sensor_config_rod2021')
     parser.add_argument('--data_dir', type=str, default='./data/', help='directory to the prepared data')
@@ -35,6 +35,8 @@ def parse_args():
     parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
     parser.add_argument('--demo', action="store_true", help='False: test with GT, True: demo without GT')
     parser.add_argument('--symbol', action="store_true", help='use symbol or text+score')
+
+    parser = parse_cfgs(parser)
     args = parser.parse_args()
     return args
 
@@ -44,6 +46,8 @@ if __name__ == "__main__":
     sybl = args.symbol
 
     config_dict = load_configs_from_file(args.config)
+    config_dict = update_config_dict(config_dict, args)  # update configs by args
+
     dataset = CRUW(data_root=config_dict['dataset_cfg']['base_root'], sensor_config_name=args.sensor_config)
     radar_configs = dataset.sensor_cfg.radar_cfg
     range_grid = dataset.range_grid

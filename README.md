@@ -59,7 +59,7 @@ Please refer to [`cruw-devit`](https://github.com/yizhou-wang/cruw-devkit) repos
 ```commandline
 git clone https://github.com/yizhou-wang/cruw-devkit.git
 cd cruw-devkit
-pip install -e .
+pip install .
 cd ..
 ```
 
