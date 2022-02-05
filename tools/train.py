@@ -2,6 +2,7 @@ import os
 import time
 import json
 import argparse
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -173,6 +174,8 @@ if __name__ == "__main__":
     scheduler = StepLR(optimizer, step_size=config_dict['train_cfg']['lr_step'], gamma=0.1)
 
     iter_count = 0
+    loss_ave = 0
+
     if cp_path is not None:
         checkpoint = torch.load(cp_path)
         if 'optimizer_state_dict' in checkpoint:
@@ -229,13 +232,15 @@ if __name__ == "__main__":
                 loss_confmap.backward()
                 optimizer.step()
 
+            loss_ave = np.average([loss_ave, loss_confmap.item()], weights=[iter_count, 1])
+
             if iter % config_dict['train_cfg']['log_step'] == 0:
                 # print statistics
-                print('epoch %2d, iter %4d: loss: %.8f | load time: %.4f | backward time: %.4f' %
-                      (epoch + 1, iter + 1, loss_confmap.item(), tic - tic_load, time.time() - tic))
+                print('epoch %2d, iter %4d: loss: %.6f (%.4f) | load time: %.2f | backward time: %.2f' %
+                      (epoch + 1, iter + 1, loss_confmap.item(), loss_ave, tic - tic_load, time.time() - tic))
                 with open(train_log_name, 'a+') as f_log:
-                    f_log.write('epoch %2d, iter %4d: loss: %.8f | load time: %.4f | backward time: %.4f\n' %
-                                (epoch + 1, iter + 1, loss_confmap.item(), tic - tic_load, time.time() - tic))
+                    f_log.write('epoch %2d, iter %4d: loss: %.6f (%.4f) | load time: %.2f | backward time: %.2f\n' %
+                                (epoch + 1, iter + 1, loss_confmap.item(), loss_ave, tic - tic_load, time.time() - tic))
 
                 if stacked_num is not None:
                     writer.add_scalar('loss/loss_all', loss_confmap.item(), iter_count)
@@ -243,6 +248,8 @@ if __name__ == "__main__":
                 else:
                     writer.add_scalar('loss/loss_all', loss_confmap.item(), iter_count)
                     confmap_pred = confmap_preds.cpu().detach().numpy()
+                writer.add_scalar('loss/loss_ave', loss_ave, iter_count)
+
                 if 'mnet_cfg' in model_cfg:
                     chirp_amp_curr = chirp_amp(data.numpy()[0, :, 0, 0, :, :], radar_configs['data_type'])
                 else:
