@@ -231,24 +231,29 @@ if __name__ == "__main__":
                 loss_confmap = criterion(confmap_preds, confmap_gt.float().cuda())
                 loss_confmap.backward()
                 optimizer.step()
+            tic_back = time.time()
 
             loss_ave = np.average([loss_ave, loss_confmap.item()], weights=[iter_count, 1])
 
             if iter % config_dict['train_cfg']['log_step'] == 0:
                 # print statistics
-                print('epoch %2d, iter %4d: loss: %.6f (%.4f) | load time: %.2f | backward time: %.2f' %
-                      (epoch + 1, iter + 1, loss_confmap.item(), loss_ave, tic - tic_load, time.time() - tic))
+                load_time = tic - tic_load
+                back_time = tic_back - tic
+                print('epoch %2d, iter %4d: loss: %.4f (%.4f) | load time: %.2f | back time: %.2f' %
+                      (epoch + 1, iter + 1, loss_confmap.item(), loss_ave, load_time, back_time))
                 with open(train_log_name, 'a+') as f_log:
-                    f_log.write('epoch %2d, iter %4d: loss: %.6f (%.4f) | load time: %.2f | backward time: %.2f\n' %
-                                (epoch + 1, iter + 1, loss_confmap.item(), loss_ave, tic - tic_load, time.time() - tic))
+                    f_log.write('epoch %2d, iter %4d: loss: %.4f (%.4f) | load time: %.2f | back time: %.2f\n' %
+                                (epoch + 1, iter + 1, loss_confmap.item(), loss_ave, load_time, back_time))
+
+                writer.add_scalar('loss/loss_all', loss_confmap.item(), iter_count)
+                writer.add_scalar('loss/loss_ave', loss_ave, iter_count)
+                writer.add_scalar('time/time_load', load_time, iter_count)
+                writer.add_scalar('time/time_back', back_time, iter_count)
 
                 if stacked_num is not None:
-                    writer.add_scalar('loss/loss_all', loss_confmap.item(), iter_count)
                     confmap_pred = confmap_preds[stacked_num - 1].cpu().detach().numpy()
                 else:
-                    writer.add_scalar('loss/loss_all', loss_confmap.item(), iter_count)
                     confmap_pred = confmap_preds.cpu().detach().numpy()
-                writer.add_scalar('loss/loss_ave', loss_ave, iter_count)
 
                 if 'mnet_cfg' in model_cfg:
                     chirp_amp_curr = chirp_amp(data.numpy()[0, :, 0, 0, :, :], radar_configs['data_type'])
