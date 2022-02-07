@@ -186,6 +186,8 @@ if __name__ == "__main__":
             loss_cp = checkpoint['loss']
             if 'iter_count' in checkpoint:
                 iter_count = checkpoint['iter_count']
+            if 'loss_ave' in checkpoint:
+                loss_ave = checkpoint['loss_ave']
         else:
             rodnet.load_state_dict(checkpoint)
 
@@ -281,7 +283,8 @@ if __name__ == "__main__":
                     'iter': iter,
                     'model_state_dict': rodnet.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'loss': loss_confmap,
+                    'loss': loss_confmap.item(),
+                    'loss_ave': loss_ave,
                     'iter_count': iter_count,
                 }
                 save_model_path = '%s/epoch_%02d_iter_%010d.pkl' % (model_dir, epoch + 1, iter_count + 1)
@@ -298,7 +301,8 @@ if __name__ == "__main__":
             'iter': iter,
             'model_state_dict': rodnet.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-            'loss': loss_confmap,
+            'loss': loss_confmap.item(),
+            'loss_ave': loss_ave,
             'iter_count': iter_count,
         }
         save_model_path = '%s/epoch_%02d_final.pkl' % (model_dir, epoch + 1)
