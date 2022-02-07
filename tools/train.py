@@ -251,6 +251,7 @@ if __name__ == "__main__":
                 writer.add_scalar('loss/loss_ave', loss_ave, iter_count)
                 writer.add_scalar('time/time_load', load_time, iter_count)
                 writer.add_scalar('time/time_back', back_time, iter_count)
+                writer.add_scalar('param/param_lr', scheduler.get_last_lr()[0], iter_count)
 
                 if stacked_num is not None:
                     confmap_pred = confmap_preds[stacked_num - 1].cpu().detach().numpy()
