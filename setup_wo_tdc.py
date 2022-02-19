@@ -45,7 +45,7 @@ def make_cuda_ext(name, module, sources):
 if __name__ == '__main__':
     setup(
         name='rodnet',
-        version='1.1',
+        version='1.2',
         description='RODNet: Object Detection from Radar Data',
         long_description=readme(),
         long_description_content_type='text/markdown',
