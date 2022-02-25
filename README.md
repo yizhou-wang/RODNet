@@ -38,6 +38,12 @@ Please cite our paper if this repository is helpful for your research:
 
 ## Installation
 
+Clone RODNet code.
+```commandline
+cd $RODNET_ROOT
+git clone https://github.com/yizhou-wang/RODNet.git
+```
+
 Create a conda environment for RODNet. Tested under Python 3.6, 3.7, 3.8.
 ```commandline
 conda create -n rodnet python=3.* -y
