@@ -280,8 +280,8 @@ if __name__ == "__main__":
                 print("saving current model ...")
                 status_dict = {
                     'model_name': model_name,
-                    'epoch': epoch,
-                    'iter': iter,
+                    'epoch': epoch + 1,
+                    'iter': iter + 1,
                     'model_state_dict': rodnet.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'loss': loss_confmap.item(),
