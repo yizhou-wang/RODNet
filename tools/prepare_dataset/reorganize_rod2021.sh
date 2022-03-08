@@ -16,5 +16,5 @@ mv TEST_RAD_H sequences/test
 mv TRAIN_RAD_H_ANNO annotations/train
 
 # merge folders and remove redundant
-rsync -av train sequences/train
+rsync -av train/ sequences/train/
 rm -r train
