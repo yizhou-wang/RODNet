@@ -1,8 +1,8 @@
 dataset_cfg = dict(
     dataset_name='ROD2021',
-    base_root="/mnt/disk2/CRUW/ROD2021",
-    data_root="/mnt/disk2/CRUW/ROD2021/sequences",
-    anno_root="/mnt/disk2/CRUW/ROD2021/annotations",
+    base_root="/mnt/disk1/CRUW/ROD2021",
+    data_root="/mnt/disk1/CRUW/ROD2021/sequences",
+    anno_root="/mnt/disk1/CRUW/ROD2021/annotations",
     anno_ext='.txt',
     train=dict(
         subdir='train',
@@ -10,7 +10,7 @@ dataset_cfg = dict(
     ),
     valid=dict(
         subdir='valid',
-        seqs=[],
+        # seqs=[],
     ),
     test=dict(
         subdir='test',
@@ -23,12 +23,13 @@ dataset_cfg = dict(
 )
 
 model_cfg = dict(
-    type='HG',
-    name='rodnet-hg1-win16',
+    type='HGwI',
+    name='rodnet-hg1wi-win16-mnet',
     max_dets=20,
-    peak_thres=0.4,
+    peak_thres=0.3,
     ols_thres=0.3,
     stacked_num=1,
+    mnet_cfg=(4, 32),
 )
 
 confmap_cfg = dict(
@@ -56,8 +57,8 @@ confmap_cfg = dict(
 )
 
 train_cfg = dict(
-    n_epoch=50,
-    batch_size=4,
+    n_epoch=100,
+    batch_size=2,
     lr=0.00001,
     lr_step=5,  # lr will decrease 10 times after lr_step epoches
     win_size=16,

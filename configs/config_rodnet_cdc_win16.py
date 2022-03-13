@@ -24,7 +24,7 @@ dataset_cfg = dict(
 
 model_cfg = dict(
     type='CDC',
-    name='rodnet-cdc-win16-wobg',
+    name='rodnet-cdc-win16',
     max_dets=20,
     peak_thres=0.3,
     ols_thres=0.3,

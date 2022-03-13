@@ -23,12 +23,14 @@ dataset_cfg = dict(
 )
 
 model_cfg = dict(
-    type='HG',
-    name='rodnet-hg1-win16',
+    type='HGv2',
+    name='rodnet-hg1v2-win16-mnet-dcn',
     max_dets=20,
     peak_thres=0.4,
     ols_thres=0.3,
     stacked_num=1,
+    mnet_cfg=(4, 32),
+    dcn=True,
 )
 
 confmap_cfg = dict(
