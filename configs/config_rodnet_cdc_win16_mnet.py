@@ -29,6 +29,7 @@ model_cfg = dict(
     peak_thres=0.3,
     ols_thres=0.3,
     mnet_cfg=(4, 32),
+    dcn=False,
 )
 
 confmap_cfg = dict(

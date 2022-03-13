@@ -30,6 +30,7 @@ model_cfg = dict(
     ols_thres=0.3,
     stacked_num=1,
     mnet_cfg=(4, 32),
+    dcn=False,
 )
 
 confmap_cfg = dict(
