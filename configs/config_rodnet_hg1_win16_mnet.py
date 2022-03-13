@@ -23,8 +23,8 @@ dataset_cfg = dict(
 )
 
 model_cfg = dict(
-    type='HG',
-    name='rodnet-hg1-win16-mnet',
+    type='HGv2',
+    name='rodnet-hg1v2-win16-mnet',
     max_dets=20,
     peak_thres=0.4,
     ols_thres=0.3,
