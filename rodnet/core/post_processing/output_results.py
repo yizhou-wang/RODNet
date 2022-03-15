@@ -18,7 +18,7 @@ def write_dets_results(res, data_id, save_path, dataset):
 
 
 def write_dets_results_single_frame(res, data_id, save_path, dataset):
-    max_dets, _  = res.shape
+    max_dets, _ = res.shape
     classes = dataset.object_cfg.classes
     with open(save_path, 'a+') as f:
         for d in range(max_dets):
@@ -28,4 +28,4 @@ def write_dets_results_single_frame(res, data_id, save_path, dataset):
             row_id = res[d, 1]
             col_id = res[d, 2]
             conf = res[d, 3]
-            f.write("%d %s %d %d %s\n" % (data_id, get_class_name(cla_id, classes), row_id, col_id, conf))
+            f.write("%d %s %d %d %.4f\n" % (data_id, get_class_name(cla_id, classes), row_id, col_id, conf))

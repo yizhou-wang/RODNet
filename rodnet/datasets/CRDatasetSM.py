@@ -159,6 +159,9 @@ class CRDatasetSM(data.Dataset):
             else:
                 raise ValueError
 
+            data_dict['start_frame'] = data_id
+            data_dict['end_frame'] = data_id + self.win_size * self.step - 1
+
         except:
             # in case load npy fail
             data_dict['status'] = False
