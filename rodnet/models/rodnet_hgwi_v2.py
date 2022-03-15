@@ -3,7 +3,11 @@ import torch.nn as nn
 
 from .backbones.hgwi import RadarStackedHourglass
 from .modules.mnet import MNet
-from ..ops.dcn import DeformConvPack3D
+
+try:
+    from ..ops.dcn import DeformConvPack3D
+except:
+    print("Warning: DCN modules are not correctly imported!")
 
 
 class RODNetHGwIDCN(nn.Module):
