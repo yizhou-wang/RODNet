@@ -188,7 +188,11 @@ class CRUW3DDetDataset(data.Dataset):
         agl_id = int(np.round(agl_id))
         ct = [agl_id, rng_id]
 
-        cls_id = get_class_id(ann_dict['obj_type'].lower(), self.dataset.object_cfg.classes)
+        if type(ann_dict['obj_type']) == str:
+            cls_id = get_class_id(ann_dict['obj_type'].lower(), self.dataset.object_cfg.classes)
+        else:
+            print('wrong annotation:', ann_dict)
+            return ct, 0, -1
         if cls_id < 0:
             return ct, 0, -1
 
