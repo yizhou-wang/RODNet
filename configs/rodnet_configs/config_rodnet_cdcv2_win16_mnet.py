@@ -25,6 +25,7 @@ dataset_cfg = dict(
 model_cfg = dict(
     type='CDCv2',
     name='rodnet-cdcv2-win16-mnet',
+    loss='bce',
     max_dets=20,
     peak_thres=0.3,
     ols_thres=0.3,

@@ -23,12 +23,12 @@ dataset_cfg = dict(
 )
 
 model_cfg = dict(
-    type='HGv2',
-    name='rodnet-hg1v2-win16-mnet-dcn',
+    type='CDCv2',
+    name='rodnet-cdcv2-win16-mnet-dcn',
+    loss='bce',
     max_dets=20,
-    peak_thres=0.4,
+    peak_thres=0.3,
     ols_thres=0.3,
-    stacked_num=1,
     mnet_cfg=(4, 32),
     dcn=True,
 )
@@ -58,7 +58,7 @@ confmap_cfg = dict(
 )
 
 train_cfg = dict(
-    n_epoch=50,
+    n_epoch=100,
     batch_size=4,
     lr=0.00001,
     lr_step=5,  # lr will decrease 10 times after lr_step epoches

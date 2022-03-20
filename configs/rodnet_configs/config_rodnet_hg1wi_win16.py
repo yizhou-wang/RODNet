@@ -1,16 +1,16 @@
 dataset_cfg = dict(
-    dataset_name='CRUW',
-    base_root="/mnt/disk2/CRUW/CRUW_MINI_AU21",
-    data_root="/mnt/disk2/CRUW/CRUW_MINI_AU21/sequences",
-    anno_root="/mnt/disk2/CRUW/CRUW_MINI_AU21/annotations",
-    anno_ext='.json',
+    dataset_name='ROD2021',
+    base_root="/mnt/disk1/CRUW/ROD2021",
+    data_root="/mnt/disk1/CRUW/ROD2021/sequences",
+    anno_root="/mnt/disk1/CRUW/ROD2021/annotations",
+    anno_ext='.txt',
     train=dict(
         subdir='train',
         # seqs=[],  # can choose from the subdir folder
     ),
     valid=dict(
         subdir='valid',
-        seqs=[],
+        # seqs=[],
     ),
     test=dict(
         subdir='test',
@@ -23,11 +23,13 @@ dataset_cfg = dict(
 )
 
 model_cfg = dict(
-    type='CDC',
-    name='rodnet-cdc-win16',
+    type='HGwI',
+    name='rodnet-hg1wi-win16',
+    loss='bce',
     max_dets=20,
     peak_thres=0.3,
     ols_thres=0.3,
+    stacked_num=1,
 )
 
 confmap_cfg = dict(
@@ -56,7 +58,7 @@ confmap_cfg = dict(
 
 train_cfg = dict(
     n_epoch=100,
-    batch_size=4,
+    batch_size=2,
     lr=0.00001,
     lr_step=5,  # lr will decrease 10 times after lr_step epoches
     win_size=16,

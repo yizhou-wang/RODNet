@@ -9,7 +9,8 @@ def chirp_amp(chirp, radar_data_type):
     :return: amplitude map for the input chirp (w x h)
     """
     c0, c1, c2 = chirp.shape
-    if radar_data_type == 'RI' or radar_data_type == 'RISEP' or radar_data_type == 'ROD2021':
+    if radar_data_type == 'RI' or radar_data_type == 'RISEP' or radar_data_type == 'ROD2021' \
+            or radar_data_type == 'CRUW2022_3DDet':
         if c0 == 2:
             chirp_abs = np.sqrt(chirp[0, :, :] ** 2 + chirp[1, :, :] ** 2)
         elif c2 == 2:
