@@ -6,27 +6,13 @@ from rodnet.core.object_class import get_class_name
 from .fig_configs import fig, fp, symbols
 
 
-def visualize_train_img_old(fig_name, input_radar, output_confmap, confmap_gt):
-    fig = plt.figure(figsize=(8, 4))
-    img = input_radar
-    fig.add_subplot(1, 3, 1)
-    plt.imshow(img, vmin=0, vmax=1, origin='lower', aspect='auto')
-    img = output_confmap
-    fig.add_subplot(1, 3, 2)
-    plt.imshow(img, vmin=0, vmax=1, origin='lower', aspect='auto')
-    img = confmap_gt
-    fig.add_subplot(1, 3, 3)
-    plt.imshow(img, vmin=0, vmax=1, origin='lower', aspect='auto')
-    plt.savefig(fig_name)
-    plt.close(fig)
-
-
 def visualize_train_img(fig_name, img_path, input_radar, output_confmap, confmap_gt):
     fig = plt.figure(figsize=(8, 8))
     img_data = mpimg.imread(img_path)
 
     fig.add_subplot(2, 2, 1)
-    plt.imshow(img_data.astype(np.uint8))
+    plt.imshow(img_data)
+    # plt.imshow(img_data.astype(np.uint8))
 
     fig.add_subplot(2, 2, 2)
     plt.imshow(input_radar, origin='lower', aspect='auto')
@@ -50,8 +36,8 @@ def visualize_test_img(fig_name, img_path, input_radar, confmap_pred, confmap_gt
     classes = dataset.object_cfg.classes
 
     img_data = mpimg.imread(img_path)
-    if img_data.shape[0] > 864:
-        img_data = img_data[:img_data.shape[0] // 5 * 4, :, :]
+    # if img_data.shape[0] > 864:
+    #     img_data = img_data[:img_data.shape[0] // 5 * 4, :, :]
 
     fig.add_subplot(2, 2, 1)
     plt.imshow(img_data.astype(np.uint8))
@@ -106,8 +92,8 @@ def visualize_test_img_wo_gt(fig_name, img_path, input_radar, confmap_pred, res_
 
     fig.set_size_inches(12, 4)
     img_data = mpimg.imread(img_path)
-    if img_data.shape[0] > 864:
-        img_data = img_data[:img_data.shape[0] // 5 * 4, :, :]
+    # if img_data.shape[0] > 864:
+    #     img_data = img_data[:img_data.shape[0] // 5 * 4, :, :]
 
     fig.add_subplot(1, 3, 1)
     plt.imshow(img_data.astype(np.uint8))

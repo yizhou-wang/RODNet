@@ -53,6 +53,7 @@ if __name__ == "__main__":
 
     # load model
     if cp_path is not None:
+        print('loading pretrained model %s ...' % cp_path)
         rodnet, optimizer, train_id_dict, loss_dict = load_checkpoint(rodnet, optimizer, args.resume_from)
 
     # setup dataloader
@@ -142,7 +143,7 @@ if __name__ == "__main__":
                 # validate()
 
                 # save current model
-                save_model_path = '%s/epoch_%02d_iter_%010d.pkl' % (model_dir, epoch + 1, iter_count + 1)
+                save_model_path = '%s/epoch_%02d_%010d.pkl' % (model_dir, epoch + 1, iter_count + 1)
                 save_model(model_name, epoch, iter, iter_count, rodnet, optimizer, loss_confmap, loss_ave,
                            save_model_path)
 

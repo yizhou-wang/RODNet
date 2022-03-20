@@ -10,7 +10,7 @@ def chirp_amp(chirp, radar_data_type):
     """
     c0, c1, c2 = chirp.shape
     if radar_data_type == 'RI' or radar_data_type == 'RISEP' or radar_data_type == 'ROD2021' \
-            or radar_data_type == 'CRUW2022_3DDet':
+            or radar_data_type == 'CRUW2022':
         if c0 == 2:
             chirp_abs = np.sqrt(chirp[0, :, :] ** 2 + chirp[1, :, :] ** 2)
         elif c2 == 2:

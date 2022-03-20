@@ -21,7 +21,7 @@
     ],
     "sample_freq": 4e6,
     "sweep_slope": 21.0017e12,
-    "data_type": "CRUW2022_3DDet",
+    "data_type": "CRUW2022",
     "chirp_folder": "radar",
     "ext": "npy",
     "rr_min": 1.0,

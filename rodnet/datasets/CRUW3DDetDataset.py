@@ -172,8 +172,8 @@ class CRUW3DDetDataset(data.Dataset):
                 ct, cls_id, w = self.convert_ann_to_grid(labels[k])
                 if w > 0:
                     radius = 2 * gaussian_radius((w, w))
-                    # radius = max(10, int(radius))
-                    radius = 6 if self.config_dict['model_cfg']['loss'] == 'mse' else radius
+                    radius = max(10, int(radius))
+                    radius = 10 if self.config_dict['model_cfg']['loss'] == 'mse' else radius
                     radius = int(np.ceil(radius))
                     draw_gaussian(hm[cls_id], ct, radius)
             hm_win[:, win_id, :, :] = hm
@@ -189,6 +189,8 @@ class CRUW3DDetDataset(data.Dataset):
         ct = [agl_id, rng_id]
 
         cls_id = get_class_id(ann_dict['obj_type'].lower(), self.dataset.object_cfg.classes)
+        if cls_id < 0:
+            return ct, 0, -1
 
         if rng >= self.dataset.range_grid[-1]:
             # outside range of radar
