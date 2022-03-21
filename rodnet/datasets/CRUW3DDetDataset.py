@@ -5,12 +5,15 @@ import random
 import numpy as np
 from tqdm import tqdm
 
+import torch
+import torchvision.transforms as T
 from torch.utils import data
 
 from cruw.mapping.coor_transform import cart2pol_ramap
 from cruw.mapping.ops import ra2idx_interpolate
 from cruw.mapping.object_types import get_class_id
 
+from rodnet.datasets.transforms import normalize
 from rodnet.utils.image import gaussian_radius, draw_msra_gaussian, draw_umich_gaussian
 
 
@@ -27,7 +30,8 @@ class CRUW3DDetDataset(data.Dataset):
     :param is_random_chirp: random load chirp or not
     """
 
-    def __init__(self, data_dir, dataset, config_dict, split, is_random_chirp=True, subset=None, noise_channel=False):
+    def __init__(self, data_dir, dataset, config_dict, split, is_random_chirp=True,
+                 transform=None, noise_channel=False, old_normalize=False):
         # parameters settings
         self.data_dir = data_dir
         self.dataset = dataset
@@ -43,6 +47,7 @@ class CRUW3DDetDataset(data.Dataset):
             self.stride = config_dict['test_cfg']['test_stride']
         self.is_random_chirp = is_random_chirp
         self.n_chirps = 1
+        self.transform = transform
         self.noise_channel = noise_channel
 
         # Dataloader for MNet
@@ -56,6 +61,10 @@ class CRUW3DDetDataset(data.Dataset):
         self.obj_infos = self.get_labels()
         self.image_paths = self.get_camera_image_paths()
         self.n_data = len(self.radar_paths)
+
+        self.old_normalize = old_normalize
+        self.mean = torch.tensor([-0.0990, -0.9608])
+        self.std = torch.tensor([531.9800, 531.0670])
 
     def __len__(self):
         """Total number of data/label pairs"""
@@ -74,23 +83,13 @@ class CRUW3DDetDataset(data.Dataset):
         )
 
         # Load radar data
-        radar_npy_win = np.load(radar_path)
-
-        # Dataloader for MNet
-        if 'mnet_cfg' in self.config_dict['model_cfg']:
-            radar_npy_win = np.transpose(radar_npy_win, (4, 0, 1, 2, 3))
-            assert radar_npy_win.shape == (
-                2, self.win_size, self.n_chirps, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
-        else:
-            radar_npy_win = np.transpose(radar_npy_win, (3, 0, 1, 2))
-            assert radar_npy_win.shape == (2, self.win_size, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
-
-        data_dict['radar_data'] = radar_npy_win
+        radar_win = np.load(radar_path)
+        radar_win = self.transform_radar_data(radar_win, old_normalize=self.old_normalize)
+        data_dict['radar_data'] = radar_win
 
         # Load annotations
         if self.split == 'train' or self.split == 'valid':
             confmap_gt = self.generate_confmap(obj_info_win)
-
             if self.noise_channel:
                 assert confmap_gt.shape == \
                        (self.n_class + 1, self.win_size, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
@@ -98,7 +97,6 @@ class CRUW3DDetDataset(data.Dataset):
                 confmap_gt = confmap_gt[:self.n_class]
                 assert confmap_gt.shape == \
                        (self.n_class, self.win_size, radar_configs['ramap_rsize'], radar_configs['ramap_asize'])
-
             data_dict['anno'] = dict(
                 obj_infos=obj_info_win,
                 confmaps=confmap_gt,
@@ -154,6 +152,37 @@ class CRUW3DDetDataset(data.Dataset):
         frame_start, frame_end = int(frame_start), int(frame_end)
         frame_ids = list(range(frame_start, frame_end))
         return seq_name, frame_ids
+
+    def transform_radar_data(self, radar_npy, old_normalize=False):
+        radar_configs = self.dataset.sensor_cfg.radar_cfg
+        radar_tensor = torch.from_numpy(radar_npy)
+        radar_tensor = radar_tensor.view([-1, radar_configs['ramap_rsize'], radar_configs['ramap_asize'], 2])
+        radar_tensor = radar_tensor.permute(0, 3, 1, 2)
+        if old_normalize:
+            radar_tensor /= 3e+04
+        else:
+            normalize(radar_tensor, mean=self.mean, std=self.std, inplace=True)
+        if 'mnet_cfg' in self.config_dict['model_cfg']:
+            radar_tensor = radar_tensor.view([self.win_size, self.n_chirps, 2,
+                                              radar_configs['ramap_rsize'],
+                                              radar_configs['ramap_asize']])
+            radar_tensor = radar_tensor.permute(2, 0, 1, 3, 4)
+        else:
+            radar_tensor = radar_tensor.view([self.win_size, 2,
+                                              radar_configs['ramap_rsize'],
+                                              radar_configs['ramap_asize']])
+            radar_tensor = radar_tensor.permute(1, 0, 2, 3)
+
+        # radar_npy_win = torch.nn.functional.normalize(radar_npy_win, dim=-1)
+
+        # radar_npy_win_amp = np.sqrt(radar_npy_win[..., 0] ** 2 + radar_npy_win[..., 1] ** 2)
+        # radar_npy_win_amp = radar_npy_win_amp[..., np.newaxis]
+        # radar_npy_win_amp = np.repeat(radar_npy_win_amp, 2, axis=-1)
+        # radar_npy_win[radar_npy_win_amp > 1] /= radar_npy_win_amp[radar_npy_win_amp > 1]
+        # print('max: %.4f, min: %.4f' % (radar_npy_win.max(), radar_npy_win.min()))
+        # print('max: %.4f, min: %.4f' % (radar_npy_win_amp.max(), radar_npy_win_amp.min()))
+
+        return radar_tensor
 
     def generate_confmap(self, obj_info_win):
         draw_gaussian = draw_msra_gaussian if self.config_dict['model_cfg']['loss'] == 'mse' else draw_umich_gaussian

@@ -33,9 +33,11 @@ def get_dataloader(dataset_name, config_dict, args, dataset):
             # dataloader_valid = CRDataLoader(crdata_valid, batch_size=batch_size, shuffle=True)
     elif dataset_name == 'CRUW2022_3DDet':
         print("Building %s dataloader ..." % dataset_name)
-        crdata_train = CRUW3DDetDataset(data_dir=args.data_root, dataset=dataset, config_dict=config_dict,
+        crdata_train = CRUW3DDetDataset(data_dir=args.data_root, dataset=dataset,
+                                        config_dict=config_dict,
                                         split='train',
-                                        noise_channel=args.use_noise_channel)
+                                        noise_channel=args.use_noise_channel,
+                                        old_normalize=args.use_old_norm)
         dataloader = DataLoader(crdata_train, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
 
 

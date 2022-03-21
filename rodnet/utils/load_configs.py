@@ -24,6 +24,8 @@ def parse_cfgs(parser):
     # dataset_cfg
     parser.add_argument('--data_root', type=str,
                         help='directory to the dataset (will overwrite data_root in config file)')
+    parser.add_argument('--use_old_norm', action="store_true",
+                        help='use old data normalization')
 
     # model_cfg
     parser.add_argument('--model_type', type=str, help='model type')
