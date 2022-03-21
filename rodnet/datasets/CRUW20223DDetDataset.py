@@ -17,7 +17,7 @@ from rodnet.datasets.transforms import normalize
 from rodnet.utils.image import gaussian_radius, draw_msra_gaussian, draw_umich_gaussian
 
 
-class CRUW3DDetDataset(data.Dataset):
+class CRUW20223DDetDataset(data.Dataset):
     """
     Pytorch Dataloader for CR Dataset
     :param detail_dir: data details directory

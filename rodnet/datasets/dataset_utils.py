@@ -5,7 +5,8 @@ from rodnet.datasets.CRDatasetSM import CRDatasetSM
 from rodnet.datasets.CRDataLoader import CRDataLoader
 from rodnet.datasets.collate_functions import cr_collate
 
-from rodnet.datasets.CRUW3DDetDataset import CRUW3DDetDataset
+from rodnet.datasets.CRUW2022Dataset import CRUW2022Dataset
+from rodnet.datasets.CRUW20223DDetDataset import CRUW20223DDetDataset
 
 
 def get_dataloader(dataset_name, config_dict, args, dataset):
@@ -31,15 +32,24 @@ def get_dataloader(dataset_name, config_dict, args, dataset):
             #                          os.path.join(args.data_dir, 'confmaps_gt'),
             #                          win_size=win_size, set_type='train', stride=8, is_Memory_Limit=True)
             # dataloader_valid = CRDataLoader(crdata_valid, batch_size=batch_size, shuffle=True)
-    elif dataset_name == 'CRUW2022_3DDet':
+
+    elif dataset_name == 'CRUW2022':
         print("Building %s dataloader ..." % dataset_name)
-        crdata_train = CRUW3DDetDataset(data_dir=args.data_root, dataset=dataset,
-                                        config_dict=config_dict,
-                                        split='train',
-                                        noise_channel=args.use_noise_channel,
-                                        old_normalize=args.use_old_norm)
+        crdata_train = CRUW2022Dataset(data_dir=args.data_root, dataset=dataset,
+                                       config_dict=config_dict,
+                                       split='train',
+                                       noise_channel=args.use_noise_channel,
+                                       old_normalize=args.use_old_norm)
         dataloader = DataLoader(crdata_train, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
 
+    elif dataset_name == 'CRUW2022_3DDet':
+        print("Building %s dataloader ..." % dataset_name)
+        crdata_train = CRUW20223DDetDataset(data_dir=args.data_root, dataset=dataset,
+                                            config_dict=config_dict,
+                                            split='train',
+                                            noise_channel=args.use_noise_channel,
+                                            old_normalize=args.use_old_norm)
+        dataloader = DataLoader(crdata_train, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
 
     else:
         raise NotImplementedError
