@@ -55,3 +55,39 @@ def get_dataloader(dataset_name, config_dict, args, dataset):
         raise NotImplementedError
 
     return crdata_train, dataloader
+
+
+def get_dataloader_test(dataset_name, config_dict, args, dataset, subset=None):
+    batch_size = 1
+    if dataset_name == 'ROD2021':
+        print("Building %s dataloader ..." % dataset_name)
+        if args.demo:
+            crdata_test = CRDataset(data_dir=args.data_dir, dataset=dataset, config_dict=config_dict, split='demo',
+                                    noise_channel=args.use_noise_channel, subset=subset, is_random_chirp=False)
+        else:
+            crdata_test = CRDataset(data_dir=args.data_dir, dataset=dataset, config_dict=config_dict, split='test',
+                                    noise_channel=args.use_noise_channel, subset=subset, is_random_chirp=False)
+        dataloader = DataLoader(crdata_test, batch_size, shuffle=False, num_workers=0, collate_fn=cr_collate)
+
+    elif dataset_name == 'CRUW2022':
+        print("Building %s dataloader ..." % dataset_name)
+        crdata_test = CRUW2022Dataset(data_dir=args.data_root, dataset=dataset,
+                                      config_dict=config_dict,
+                                      split='test',
+                                      noise_channel=args.use_noise_channel,
+                                      old_normalize=args.use_old_norm)
+        dataloader = DataLoader(crdata_test, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
+
+    elif dataset_name == 'CRUW2022_3DDet':  # TODO: to be tested
+        print("Building %s dataloader ..." % dataset_name)
+        crdata_test = CRUW20223DDetDataset(data_dir=args.data_root, dataset=dataset,
+                                           config_dict=config_dict,
+                                           split='test',
+                                           noise_channel=args.use_noise_channel,
+                                           old_normalize=args.use_old_norm)
+        dataloader = DataLoader(crdata_test, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
+
+    else:
+        raise NotImplementedError
+
+    return crdata_test, dataloader

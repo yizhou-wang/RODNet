@@ -32,7 +32,6 @@ def parse_args():
     parser.add_argument('--log_dir', type=str, default='./checkpoints/', help='directory to save trained model')
     parser.add_argument('--resume_from', type=str, default=None, help='path to the trained model')
     parser.add_argument('--save_memory', action="store_true", help="use customized dataloader to save memory")
-    parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
 
     parser = parse_cfgs(parser)
     args = parser.parse_args()

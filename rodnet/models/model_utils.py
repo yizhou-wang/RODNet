@@ -4,7 +4,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 
 
-def create_model(config_dict, args, dataset):
+def create_model(config_dict, args, dataset, is_train=True):
     model_cfg = config_dict['model_cfg']
     print("Building model ... (%s)" % model_cfg)
 
@@ -57,26 +57,31 @@ def create_model(config_dict, args, dataset):
     else:
         raise NotImplementedError
 
-    if config_dict['model_cfg']['loss'] == 'mse':
-        criterion = nn.MSELoss()
-    elif config_dict['model_cfg']['loss'] == 'bce':
-        criterion = nn.BCELoss()
+    if is_train:
+        if config_dict['model_cfg']['loss'] == 'mse':
+            criterion = nn.MSELoss()
+        elif config_dict['model_cfg']['loss'] == 'bce':
+            criterion = nn.BCELoss()
+        else:
+            raise NotImplementedError
+
+        optimizer = optim.Adam(rodnet.parameters(), lr=config_dict['train_cfg']['lr'])
+        scheduler = StepLR(optimizer, step_size=config_dict['train_cfg']['lr_step'], gamma=0.1)
+
+        return rodnet, criterion, optimizer, scheduler
+
     else:
-        raise NotImplementedError
-
-    optimizer = optim.Adam(rodnet.parameters(), lr=config_dict['train_cfg']['lr'])
-    scheduler = StepLR(optimizer, step_size=config_dict['train_cfg']['lr_step'], gamma=0.1)
-
-    return rodnet, criterion, optimizer, scheduler
+        return rodnet
 
 
-def load_checkpoint(rodnet, optimizer, cp_path):
+def load_checkpoint(rodnet, cp_path, optimizer=None, is_train=True):
     checkpoint = torch.load(cp_path)
     train_id_dict = {}
     loss_dict = {}
     if 'optimizer_state_dict' in checkpoint:
         rodnet.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if is_train and optimizer is not None:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         train_id_dict['epoch_start'] = checkpoint['epoch'] + 1
         train_id_dict['iter_start'] = checkpoint['iter'] + 1
         loss_dict['loss_cp'] = checkpoint['loss']
@@ -86,7 +91,10 @@ def load_checkpoint(rodnet, optimizer, cp_path):
             loss_dict['loss_ave'] = checkpoint['loss_ave']
     else:
         rodnet.load_state_dict(checkpoint)
-    return rodnet, optimizer, train_id_dict, loss_dict
+    if is_train:
+        return rodnet, optimizer, train_id_dict, loss_dict
+    else:
+        return rodnet
 
 
 def save_model(model_name, epoch, iter, iter_count, rodnet, optimizer, loss_confmap, loss_ave, save_model_path):

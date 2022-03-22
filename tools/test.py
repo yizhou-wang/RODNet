@@ -26,7 +26,6 @@ def parse_args():
     parser.add_argument('--data_dir', type=str, default='./data/', help='directory to the prepared data')
     parser.add_argument('--checkpoint', type=str, help='path to the saved trained model')
     parser.add_argument('--res_dir', type=str, default='./results/', help='directory to save testing results')
-    parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
     parser.add_argument('--demo', action="store_true", help='False: test with GT, True: demo without GT')
     parser.add_argument('--symbol', action="store_true", help='use symbol or text+score')
 

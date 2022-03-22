@@ -25,7 +25,6 @@ def parse_args():
     # parser.add_argument('--data_dir', type=str, default='./data/', help='directory to the prepared data')
     parser.add_argument('--log_dir', type=str, default='./checkpoints/', help='directory to save trained model')
     parser.add_argument('--resume_from', type=str, default=None, help='path to the trained model')
-    parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
 
     parser = parse_cfgs(parser)
     args = parser.parse_args()
@@ -54,7 +53,7 @@ if __name__ == "__main__":
     # load model
     if cp_path is not None:
         print('loading pretrained model %s ...' % cp_path)
-        rodnet, optimizer, train_id_dict, loss_dict = load_checkpoint(rodnet, optimizer, args.resume_from)
+        rodnet, optimizer, train_id_dict, loss_dict = load_checkpoint(rodnet, args.resume_from, optimizer)
 
     # setup dataloader
     crdata_train, dataloader = get_dataloader(dataset.dataset, config_dict, args, dataset)

@@ -36,6 +36,7 @@ def parse_cfgs(parser):
     parser.add_argument('--stacked_num', type=int, help='number of stack for HG')
     parser.add_argument('--mnet_cfg', type=tuple, help='MNet configuration')
     parser.add_argument('--dcn', type=bool, help='whether use TDC')
+    parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
 
     # train_cfg
     parser.add_argument('--n_epoch', type=int, help='number of training epochs')
