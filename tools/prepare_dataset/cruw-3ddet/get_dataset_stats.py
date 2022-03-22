@@ -16,7 +16,6 @@ def parse_args():
     # parser.add_argument('--data_dir', type=str, default='./data/', help='directory to the prepared data')
     parser.add_argument('--log_dir', type=str, default='./checkpoints/', help='directory to save trained model')
     parser.add_argument('--resume_from', type=str, default=None, help='path to the trained model')
-    parser.add_argument('--use_noise_channel', action="store_true", help="use noise channel or not")
 
     parser = parse_cfgs(parser)
     args = parser.parse_args()
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 
     # loop through images
     for inputs in tqdm.tqdm(crdata_train):
-        radar_tensor = inputs['radar_data']
+        radar_tensor = inputs['radar_data']  # 2 x 16 x 4 x 128 x 128
         # radar_tensor = torch.from_numpy(inputs['radar_data'])
         psum += radar_tensor.sum(axis=(1, 2, 3, 4))
         psum_sq += (radar_tensor ** 2).sum(axis=(1, 2, 3, 4))
@@ -62,7 +61,7 @@ if __name__ == '__main__':
 
     # mean and std
     total_mean = psum / count
-    total_var = (psum_sq - total_mean ** 2) / count
+    total_var = psum_sq / count - total_mean ** 2
     total_std = torch.sqrt(total_var)
 
     # output
