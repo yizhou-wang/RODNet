@@ -26,4 +26,5 @@ def normalize(tensor, mean, std, inplace=False):
     mean = torch.as_tensor(mean, dtype=dtype, device=tensor.device)
     std = torch.as_tensor(std, dtype=dtype, device=tensor.device)
     tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
+    # tensor.sub_(mean[:, None, None, None, None]).div_(std[:, None, None, None, None])
     return tensor

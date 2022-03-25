@@ -155,9 +155,10 @@ class CRUW20223DDetDataset(data.Dataset):
 
     def transform_radar_data(self, radar_npy, old_normalize=False):
         radar_configs = self.dataset.sensor_cfg.radar_cfg
-        radar_tensor = torch.from_numpy(radar_npy)
+        radar_tensor = torch.from_numpy(radar_npy)  # 16 x 4 x 128 x 128 x 2
         radar_tensor = radar_tensor.view([-1, radar_configs['ramap_rsize'], radar_configs['ramap_asize'], 2])
-        radar_tensor = radar_tensor.permute(0, 3, 1, 2)
+        radar_tensor = radar_tensor.permute(0, 3, 1, 2)   # 64 x 2 x 128 x 128
+        # radar_tensor = radar_tensor.permute(4, 0, 1, 2, 3)  # 2 x 16 x 4 x 128 x 128
         if old_normalize:
             radar_tensor /= 3e+04
         else:
@@ -172,15 +173,6 @@ class CRUW20223DDetDataset(data.Dataset):
                                               radar_configs['ramap_rsize'],
                                               radar_configs['ramap_asize']])
             radar_tensor = radar_tensor.permute(1, 0, 2, 3)
-
-        # radar_npy_win = torch.nn.functional.normalize(radar_npy_win, dim=-1)
-
-        # radar_npy_win_amp = np.sqrt(radar_npy_win[..., 0] ** 2 + radar_npy_win[..., 1] ** 2)
-        # radar_npy_win_amp = radar_npy_win_amp[..., np.newaxis]
-        # radar_npy_win_amp = np.repeat(radar_npy_win_amp, 2, axis=-1)
-        # radar_npy_win[radar_npy_win_amp > 1] /= radar_npy_win_amp[radar_npy_win_amp > 1]
-        # print('max: %.4f, min: %.4f' % (radar_npy_win.max(), radar_npy_win.min()))
-        # print('max: %.4f, min: %.4f' % (radar_npy_win_amp.max(), radar_npy_win_amp.min()))
 
         return radar_tensor
 
