@@ -81,8 +81,8 @@ class CRUW2022Dataset(data.Dataset):
         self.n_data = len(self.radar_paths)
 
         self.old_normalize = old_normalize
-        # self.mean = torch.tensor([-0.0990, -0.9608])
-        # self.std = torch.tensor([531.9800, 531.0670])
+        self.mean = torch.tensor([-0.0990, -0.9608])
+        self.std = torch.tensor([531.9800, 531.0670])
 
     def __len__(self):
         """Total number of data/label pairs"""
