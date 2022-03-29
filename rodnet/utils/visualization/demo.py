@@ -40,7 +40,7 @@ def visualize_test_img(fig_name, img_path, input_radar, confmap_pred, confmap_gt
     #     img_data = img_data[:img_data.shape[0] // 5 * 4, :, :]
 
     fig.add_subplot(2, 2, 1)
-    plt.imshow(img_data.astype(np.uint8))
+    plt.imshow(img_data)
     plt.axis('off')
     plt.title("Image")
 
@@ -96,7 +96,7 @@ def visualize_test_img_wo_gt(fig_name, img_path, input_radar, confmap_pred, res_
     #     img_data = img_data[:img_data.shape[0] // 5 * 4, :, :]
 
     fig.add_subplot(1, 3, 1)
-    plt.imshow(img_data.astype(np.uint8))
+    plt.imshow(img_data)
     plt.axis('off')
     plt.title("RGB Image")
 

@@ -76,7 +76,7 @@ def get_dataloader_test(dataset_name, config_dict, args, dataset, subset=None):
                                       split='test',
                                       noise_channel=args.use_noise_channel,
                                       old_normalize=args.use_old_norm)
-        dataloader = DataLoader(crdata_test, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
+        dataloader = DataLoader(crdata_test, batch_size, shuffle=False, num_workers=0, collate_fn=cr_collate)
 
     elif dataset_name == 'CRUW2022_3DDet':  # TODO: to be tested
         print("Building %s dataloader ..." % dataset_name)
@@ -85,7 +85,7 @@ def get_dataloader_test(dataset_name, config_dict, args, dataset, subset=None):
                                            split='test',
                                            noise_channel=args.use_noise_channel,
                                            old_normalize=args.use_old_norm)
-        dataloader = DataLoader(crdata_test, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
+        dataloader = DataLoader(crdata_test, batch_size, shuffle=False, num_workers=0, collate_fn=cr_collate)
 
     else:
         raise NotImplementedError

@@ -31,7 +31,16 @@ SPLIT_SEQ_DICT = {
         '2022_0203_1512',
     ],
     'valid': [],
-    'test': []
+    'test': [
+        '2022_0217_1251',
+        '2022_0217_1307',
+        '2022_0217_1322',
+    ],
+    'demo': [
+        '2022_0217_1251',
+        '2022_0217_1307',
+        '2022_0217_1322',
+    ]
 }
 
 
@@ -75,7 +84,7 @@ class CRUW2022Dataset(data.Dataset):
         self.chirp_ids = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
 
         # dataset initialization
-        self.radar_paths = self.get_radar_image_paths()
+        self.radar_paths, self.seq_names = self.get_radar_image_paths()
         self.obj_infos = self.get_labels()
         self.image_paths = self.get_camera_image_paths()
         self.n_data = len(self.radar_paths)
@@ -91,13 +100,15 @@ class CRUW2022Dataset(data.Dataset):
     def __getitem__(self, index):
         image_paths = self.image_paths[index]
         radar_paths = self.radar_paths[index]
+        seq_names = self.seq_names[index]
         obj_info_win = self.obj_infos[index]
         radar_configs = self.dataset.sensor_cfg.radar_cfg
 
         data_dict = dict(
             status=True,
             image_paths=image_paths,
-            radar_paths=radar_paths
+            radar_paths=radar_paths,
+            seq_names=seq_names,
         )
 
         # Load radar data
@@ -141,6 +152,7 @@ class CRUW2022Dataset(data.Dataset):
         n_chirps = self.dataset.sensor_cfg.radar_cfg['n_chirps']
         chirp_ids_sel = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
         radar_win_paths = []
+        seq_names_ = []
         print('loading radar paths ...')
         for seq_name in tqdm(seq_names):
             radar_data_dir = os.path.join(self.data_dir, seq_name, self.dataset.sensor_cfg.radar_cfg['chirp_folder'])
@@ -157,24 +169,30 @@ class CRUW2022Dataset(data.Dataset):
                 if data_id_end >= n_data:
                     continue
                 radar_win_paths.append(radar_data_paths[data_id:data_id_end])
-        return radar_win_paths
+                seq_names_.append(seq_name)
+        return radar_win_paths, seq_names_
 
     def get_labels(self):
         label_paths = []
+        label_paths_ = []
         for path_win in self.radar_paths:
             label_paths_win = []
+            label_paths_win_ = []
             for path_frame in path_win:
                 frame_id, chirp_id = path_frame[0].split('/')[-1].split('.')[0].split('_')
                 label_path = path_frame[0].replace('.npy', '.json').replace(
                     self.dataset.sensor_cfg.radar_cfg['chirp_folder'],
                     'label').replace('_' + chirp_id, '')
                 label_paths_win.append(label_path)
+                label_path_ = label_path.replace(self.data_dir, '/mnt/disk2/CRUW_2022/CRUW_2022_label')
+                label_paths_win_.append(label_path_)
             label_paths.append(label_paths_win)
+            label_paths_.append(label_paths_win_)
         self.label_paths = label_paths
 
         labels = []
         print('loading labels ...')
-        for label_paths_win in tqdm(label_paths):
+        for label_paths_win in tqdm(label_paths_):
             labels_win = []
             for label_path in label_paths_win:
                 if os.path.exists(label_path):
@@ -197,7 +215,7 @@ class CRUW2022Dataset(data.Dataset):
             for label_path in label_paths_win:
                 img_path = label_path.replace('.json', '.%s' % self.dataset.sensor_cfg.camera_cfg['ext']).replace(
                     'label', self.dataset.sensor_cfg.camera_cfg['image_folder'])
-                assert os.path.exists(img_path)
+                assert os.path.exists(img_path), img_path
                 camera_paths_.append(img_path)
             camera_paths.append(camera_paths_)
         return camera_paths
