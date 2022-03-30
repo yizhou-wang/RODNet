@@ -8,7 +8,8 @@ from cruw import CRUW
 from cruw.visualization.draw_rgb import draw_dets
 from cruw.visualization.draw_rf import draw_centers
 from cruw.visualization.utils import generate_colors_rgb
-from cruw.mapping.ops import xz2raidx
+from cruw.mapping.ops import ra2idx, xz2raidx
+from cruw.mapping.coor_transform import pol2cart_ramap, cart2pol_ramap
 
 
 def load_json(json_path):
@@ -54,7 +55,18 @@ def draw_data_frame(image_path, chirp, anno_dict, save_path, cruw):
         x, y, z = convert_lidar_to_radar(anno_dict[obj_id]['loc3d'], cruw)
         if z < cruw.range_grid[-1]:  # only show annotations with range grid
             categories.append(anno_dict[obj_id]['obj_type'])
-            center_ids.append(xz2raidx(x, z, cruw.range_grid, cruw.angle_grid))
+
+            # use geometric center
+            # rng_id, agl_id = xz2raidx(x, z, cruw.range_grid, cruw.angle_grid)
+
+            # use nearest center
+            rng, agl = cart2pol_ramap(x, z)
+            rrw = max(anno_dict[obj_id]['dim3d']['l'], anno_dict[obj_id]['dim3d']['w'])
+            rng -= rrw / 4
+            rng_id, agl_id = ra2idx(rng, agl, cruw.range_grid, cruw.angle_grid)
+
+            center_ids.append((rng_id, agl_id))
+
     colors = generate_colors_rgb(n_obj)
     draw_centers(ax2, chirp, center_ids, colors, texts=categories, normalized=False)
     ax2.set_title('RF Image')
@@ -86,7 +98,8 @@ def visualize_split(data_root, split, cruw):
         radar_data_win = np.load(radar_path)
         win_size, n_chirps, ramap_rsize, ramap_asize, n_channels = radar_data_win.shape
 
-        label_path = os.path.join(label_dir, label_names[data_id])
+        label_name = radar_names[data_id].replace('.npy', '.json')
+        label_path = os.path.join(label_dir, label_name)
         label_dict_win = load_json(label_path)
 
         for win_id in range(win_size):
