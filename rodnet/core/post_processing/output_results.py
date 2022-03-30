@@ -1,3 +1,5 @@
+import os
+
 from rodnet.core.object_class import get_class_name
 
 
@@ -20,6 +22,9 @@ def write_dets_results(res, data_id, save_path, dataset):
 def write_dets_results_single_frame(res, data_id, save_path, dataset):
     max_dets, _ = res.shape
     classes = dataset.object_cfg.classes
+    if not os.path.exists(save_path):
+        with open(save_path, 'w') as f:
+            pass
     with open(save_path, 'a+') as f:
         for d in range(max_dets):
             cla_id = int(res[d, 0])
