@@ -45,20 +45,22 @@ SPLIT_SEQ_DICT = {
 
 
 class CRUW2022Dataset(data.Dataset):
-    """
-    Pytorch Dataloader for CR Dataset
-    :param detail_dir: data details directory
-    :param confmap_dir: confidence maps directory
-    :param win_size: seqence window size
-    :param n_class: number of classes for detection
-    :param step: frame step inside each sequence
-    :param stride: data sampling
-    :param set_type: train, valid, test
-    :param is_random_chirp: random load chirp or not
-    """
 
     def __init__(self, data_dir, dataset, config_dict, split, is_random_chirp=True,
-                 transform=None, noise_channel=False, old_normalize=False):
+                 transform=None, noise_channel=False, old_normalize=False, use_geo_center=False):
+        """
+        Pytorch Dataloader for CR Dataset
+        :param data_dir: data directory
+        :param dataset: CRUW dataset object
+        :param config_dict: configuration dictionary
+        :param split: dataset split
+        :param is_random_chirp: random load chirp or not
+        :param transform: pytorch dataset transforms
+        :param noise_channel: use noise channel or not
+        :param old_normalize: use old normalization method or not
+        :param use_geo_center: use 3D bbox geometric center or not
+        """
+
         # parameters settings
         self.data_dir = data_dir
         self.dataset = dataset
@@ -92,6 +94,12 @@ class CRUW2022Dataset(data.Dataset):
         self.old_normalize = old_normalize
         self.mean = torch.tensor([-0.0990, -0.9608])
         self.std = torch.tensor([531.9800, 531.0670])
+
+        self.use_geo_center = use_geo_center
+        if self.use_geo_center:
+            print('using geometric center')
+        else:
+            print('using nearest point')
 
     def __len__(self):
         """Total number of data/label pairs"""
@@ -248,16 +256,6 @@ class CRUW2022Dataset(data.Dataset):
                                               radar_configs['ramap_rsize'],
                                               radar_configs['ramap_asize']])
             radar_tensor = radar_tensor.permute(1, 0, 2, 3)
-
-        # radar_npy_win = torch.nn.functional.normalize(radar_npy_win, dim=-1)
-
-        # radar_npy_win_amp = np.sqrt(radar_npy_win[..., 0] ** 2 + radar_npy_win[..., 1] ** 2)
-        # radar_npy_win_amp = radar_npy_win_amp[..., np.newaxis]
-        # radar_npy_win_amp = np.repeat(radar_npy_win_amp, 2, axis=-1)
-        # radar_npy_win[radar_npy_win_amp > 1] /= radar_npy_win_amp[radar_npy_win_amp > 1]
-        # print('max: %.4f, min: %.4f' % (radar_npy_win.max(), radar_npy_win.min()))
-        # print('max: %.4f, min: %.4f' % (radar_npy_win_amp.max(), radar_npy_win_amp.min()))
-
         return radar_tensor
 
     def convert_label(self, label_dict):
@@ -304,7 +302,19 @@ class CRUW2022Dataset(data.Dataset):
         x = ann_dict['loc3d']['x']
         z = ann_dict['loc3d']['z']
         rng, agl = cart2pol_ramap(x, z)
-        rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
+
+        if self.use_geo_center:
+            # use geometric center
+            # print('using geometric center')
+            rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
+
+        else:
+            # use nearest center
+            # print('using nearest center')
+            rrw = max(ann_dict['dim3d']['l'], ann_dict['dim3d']['w'])
+            rng -= rrw / 4
+            rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
+
         rng_id = int(np.round(rng_id))
         agl_id = int(np.round(agl_id))
         ct = [agl_id, rng_id]
