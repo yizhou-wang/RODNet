@@ -74,6 +74,7 @@ def get_dataloader_test(dataset_name, config_dict, args, dataset, subset=None):
         crdata_test = CRUW2022Dataset(data_dir=args.data_root, dataset=dataset,
                                       config_dict=config_dict,
                                       split='test',
+                                      sub_seq=subset,
                                       noise_channel=args.use_noise_channel,
                                       old_normalize=args.use_old_norm)
         dataloader = DataLoader(crdata_test, batch_size, shuffle=False, num_workers=0, collate_fn=cr_collate)

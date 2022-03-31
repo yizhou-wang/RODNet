@@ -46,7 +46,7 @@ SPLIT_SEQ_DICT = {
 
 class CRUW2022Dataset(data.Dataset):
 
-    def __init__(self, data_dir, dataset, config_dict, split, is_random_chirp=True,
+    def __init__(self, data_dir, dataset, config_dict, split, sub_seq=None, is_random_chirp=True,
                  transform=None, noise_channel=False, old_normalize=False, use_geo_center=False):
         """
         Pytorch Dataloader for CR Dataset
@@ -86,7 +86,7 @@ class CRUW2022Dataset(data.Dataset):
         self.chirp_ids = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
 
         # dataset initialization
-        self.radar_paths, self.seq_names = self.get_radar_image_paths()
+        self.radar_paths, self.seq_names = self.get_radar_image_paths(sub_seq)
         self.obj_infos = self.get_labels()
         self.image_paths = self.get_camera_image_paths()
         self.n_data = len(self.radar_paths)
@@ -155,8 +155,13 @@ class CRUW2022Dataset(data.Dataset):
 
         return data_dict
 
-    def get_radar_image_paths(self):
+    def get_radar_image_paths(self, subseq=None):
         seq_names = SPLIT_SEQ_DICT[self.split]
+        if subseq is not None:
+            if subseq in seq_names:
+                seq_names = [subseq]
+            else:
+                raise ValueError('sub-sequence %s not found' % subseq)
         n_chirps = self.dataset.sensor_cfg.radar_cfg['n_chirps']
         chirp_ids_sel = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
         radar_win_paths = []

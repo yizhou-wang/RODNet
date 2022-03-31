@@ -101,9 +101,7 @@ def visualize_test_img_wo_gt(fig_name, img_path, input_radar, confmap_pred, res_
     plt.title("RGB Image")
 
     fig.add_subplot(1, 3, 2)
-    input_radar[input_radar < 0] = 0
-    input_radar[input_radar > 1] = 1
-    plt.imshow(input_radar, vmin=0, vmax=1, origin='lower', aspect='auto')
+    plt.imshow(input_radar, origin='lower', aspect='auto')
     plt.axis('off')
     plt.title("RF Image")
 

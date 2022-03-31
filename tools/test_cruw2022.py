@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
         print('testing sequence %s ...' % seq_name)
         # setup dataloader
-        crdata_test, dataloader = get_dataloader_test(dataset.dataset, config_dict, args, dataset)
+        crdata_test, dataloader = get_dataloader_test(dataset.dataset, config_dict, args, dataset, subset=seq_name)
 
         init_genConfmap = ConfmapStack(confmap_shape)
         iter_ = init_genConfmap
