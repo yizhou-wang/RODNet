@@ -49,18 +49,25 @@ if __name__ == '__main__':
         # preload camera image paths and radar images
         print("Pre-loading camera and radar images %s ..." % seq_name)
         for frameid in tqdm.tqdm(range(n_frame)):
-            chirp_data = np.load(os.path.join(frame_dir, frame_names[frameid]))
-            chirp_data_cart, _ = rf2rfcart(chirp_data, dataset.range_grid, dataset.angle_grid,
-                                           xz_grid, magnitude_only=False)
-
-            chirp_vis_dir = os.path.join(args.data_root, seq_name, 'radar/npy/ra_cart')
-            os.makedirs(chirp_vis_dir, exist_ok=True)
-            chirp_vis_path = os.path.join(chirp_vis_dir, frame_names[frameid])
-            np.save(chirp_vis_path, chirp_data_cart)
+            chirp_npy_dir = os.path.join(args.data_root, seq_name, 'radar/npy/ra_cart')
+            os.makedirs(chirp_npy_dir, exist_ok=True)
+            chirp_npy_path = os.path.join(chirp_npy_dir, frame_names[frameid])
 
             chirp_vis_dir = os.path.join(args.data_root, seq_name, 'radar/vis/ra_cart')
             os.makedirs(chirp_vis_dir, exist_ok=True)
             chirp_vis_path = os.path.join(chirp_vis_dir, frame_names[frameid].replace('.npy', '.jpg'))
+
+            if os.path.exists(chirp_npy_path) and os.path.exists(chirp_vis_path):
+                # skip if files exist
+                continue
+
+            # save npy files
+            chirp_data = np.load(os.path.join(frame_dir, frame_names[frameid]))
+            chirp_data_cart, _ = rf2rfcart(chirp_data, dataset.range_grid, dataset.angle_grid,
+                                           xz_grid, magnitude_only=False)
+            np.save(chirp_npy_path, chirp_data_cart)
+
+            # visualization
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1)
             ax_im = ax.imshow(magnitude(chirp_data_cart, radar_data_type='RI'), origin='lower', vmin=0, vmax=5000)
