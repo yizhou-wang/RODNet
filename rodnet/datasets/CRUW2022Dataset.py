@@ -29,6 +29,10 @@ SPLIT_SEQ_DICT = {
         '2022_0203_1443',
         '2022_0203_1445',
         '2022_0203_1512',
+        '2022_0217_1232',
+        '2022_0217_1251',
+        '2022_0217_1307',
+        '2022_0217_1322'
     ],
     'valid': [],
     'test': [
@@ -37,11 +41,25 @@ SPLIT_SEQ_DICT = {
         '2022_0217_1322',
     ],
     'demo': [
+        '2021_1120_1616',
+        '2021_1120_1618',
+        '2021_1120_1632',
+        '2021_1120_1634',
+        '2022_0203_1428',
+        '2022_0203_1439',
+        '2022_0203_1441',
+        '2022_0203_1443',
+        '2022_0203_1445',
+        '2022_0203_1512',
+        '2022_0217_1232',
         '2022_0217_1251',
         '2022_0217_1307',
-        '2022_0217_1322',
+        '2022_0217_1322'
     ]
 }
+
+PART_SEQ_TRAINING = 0.7
+LOCAL_LABEL_DIR = '/mnt/disk2/CRUW_2022/CRUW_2022_label'
 
 
 class CRUW2022Dataset(data.Dataset):
@@ -171,6 +189,20 @@ class CRUW2022Dataset(data.Dataset):
             radar_data_dir = os.path.join(self.data_dir, seq_name, self.dataset.sensor_cfg.radar_cfg['chirp_folder'])
             radar_data_names = os.listdir(radar_data_dir)
             radar_data_names.sort()
+            if PART_SEQ_TRAINING > 0:
+                seq_length = int(len(radar_data_names) / n_chirps)
+                part_seq_length = int(seq_length * PART_SEQ_TRAINING)
+                if self.split == 'train':
+                    radar_data_names = radar_data_names[:part_seq_length * n_chirps]
+                    print('training using part of the sequence %d/%d' % (part_seq_length, seq_length))
+                elif self.split == 'split':
+                    raise NotImplementedError
+                elif self.split == 'test' or self.split == 'demo':
+                    radar_data_names = radar_data_names[part_seq_length * n_chirps:]
+                    print('inference using part of the sequence %d/%d' % (seq_length - part_seq_length, seq_length))
+                else:
+                    raise NotImplementedError
+
             radar_data_paths = [os.path.join(radar_data_dir, fname) for fname in radar_data_names]
             radar_data_paths = [radar_data_paths[data_id:data_id + n_chirps] for data_id in
                                 range(0, len(radar_data_paths), n_chirps)]
@@ -197,7 +229,10 @@ class CRUW2022Dataset(data.Dataset):
                     self.dataset.sensor_cfg.radar_cfg['chirp_folder'],
                     'label').replace('_' + chirp_id, '')
                 label_paths_win.append(label_path)
-                label_path_ = label_path.replace(self.data_dir, '/mnt/disk2/CRUW_2022/CRUW_2022_label')
+                if LOCAL_LABEL_DIR is not None:
+                    label_path_ = label_path.replace(self.data_dir, LOCAL_LABEL_DIR)
+                else:
+                    label_path_ = label_path
                 label_paths_win_.append(label_path_)
             label_paths.append(label_paths_win)
             label_paths_.append(label_paths_win_)
