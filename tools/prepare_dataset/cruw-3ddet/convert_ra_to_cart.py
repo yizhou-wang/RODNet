@@ -37,11 +37,17 @@ if __name__ == '__main__':
 
     seq_names = sorted(os.listdir(args.data_root))
     seq_names = [s for s in seq_names if len(s) == 14]
+    # seq_names = seq_names[9:10]
 
     for seq_name in seq_names:
         frame_dir = os.path.join(args.data_root, seq_name, dataset.sensor_cfg.radar_cfg['chirp_folder'])
         frame_names = os.listdir(frame_dir)
-        n_frame = len(frame_names)  # / dataset.sensor_cfg.radar_cfg['n_chirps']
+        frame_names_sel = []
+        for frame_name in frame_names:
+            chirp_id = int(frame_name.split('.')[0].split('_')[1])
+            if chirp_id in dataset.sensor_cfg.radar_cfg['chirp_ids']:
+                frame_names_sel.append(frame_name)
+        n_frame = len(frame_names_sel)  # / dataset.sensor_cfg.radar_cfg['n_chirps']
 
         # load sensor calibration params
         xz_grid = dataset.xz_grid
@@ -51,18 +57,18 @@ if __name__ == '__main__':
         for frameid in tqdm.tqdm(range(n_frame)):
             chirp_npy_dir = os.path.join(args.data_root, seq_name, 'radar/npy/ra_cart')
             os.makedirs(chirp_npy_dir, exist_ok=True)
-            chirp_npy_path = os.path.join(chirp_npy_dir, frame_names[frameid])
+            chirp_npy_path = os.path.join(chirp_npy_dir, frame_names_sel[frameid])
 
             chirp_vis_dir = os.path.join(args.data_root, seq_name, 'radar/vis/ra_cart')
             os.makedirs(chirp_vis_dir, exist_ok=True)
-            chirp_vis_path = os.path.join(chirp_vis_dir, frame_names[frameid].replace('.npy', '.jpg'))
+            chirp_vis_path = os.path.join(chirp_vis_dir, frame_names_sel[frameid].replace('.npy', '.jpg'))
 
             if os.path.exists(chirp_npy_path) and os.path.exists(chirp_vis_path):
                 # skip if files exist
                 continue
 
             # save npy files
-            chirp_data = np.load(os.path.join(frame_dir, frame_names[frameid]))
+            chirp_data = np.load(os.path.join(frame_dir, frame_names_sel[frameid]))
             chirp_data_cart, _ = rf2rfcart(chirp_data, dataset.range_grid, dataset.angle_grid,
                                            xz_grid, magnitude_only=False)
             np.save(chirp_npy_path, chirp_data_cart)

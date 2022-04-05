@@ -188,6 +188,12 @@ class CRUW2022Dataset(data.Dataset):
         for seq_name in tqdm(seq_names):
             radar_data_dir = os.path.join(self.data_dir, seq_name, self.dataset.sensor_cfg.radar_cfg['chirp_folder'])
             radar_data_names = os.listdir(radar_data_dir)
+            frame_names_sel = []
+            for frame_name in radar_data_names:
+                chirp_id = int(frame_name.split('.')[0].split('_')[1])
+                if chirp_id in chirp_ids_sel:
+                    frame_names_sel.append(frame_name)
+            radar_data_names = frame_names_sel
             radar_data_names.sort()
             if PART_SEQ_TRAINING > 0:
                 seq_length = int(len(radar_data_names) / n_chirps)
@@ -205,7 +211,7 @@ class CRUW2022Dataset(data.Dataset):
 
             radar_data_paths = [os.path.join(radar_data_dir, fname) for fname in radar_data_names]
             radar_data_paths = [radar_data_paths[data_id:data_id + n_chirps] for data_id in
-                                range(0, len(radar_data_paths), n_chirps)]
+                                range(len(radar_data_paths))]
             radar_data_paths = [[radar_data_paths[fid][cid] for cid in chirp_ids_sel] for fid in
                                 range(len(radar_data_paths))]
             n_data = len(radar_data_paths)
