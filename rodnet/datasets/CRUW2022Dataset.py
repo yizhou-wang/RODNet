@@ -36,13 +36,8 @@ SPLIT_SEQ_DICT = {
     ],
     'valid': [],
     'test': [
-        '2022_0217_1251',
-        '2022_0217_1307',
-        '2022_0217_1322',
-    ],
-    'demo': [
-        '2021_1120_1616',
-        '2021_1120_1618',
+        # '2021_1120_1616',
+        # '2021_1120_1618',
         '2021_1120_1632',
         '2021_1120_1634',
         '2022_0203_1428',
@@ -51,10 +46,26 @@ SPLIT_SEQ_DICT = {
         '2022_0203_1443',
         '2022_0203_1445',
         '2022_0203_1512',
-        '2022_0217_1232',
-        '2022_0217_1251',
-        '2022_0217_1307',
-        '2022_0217_1322'
+        # '2022_0217_1232',
+        # '2022_0217_1251',
+        # '2022_0217_1307',
+        # '2022_0217_1322'
+    ],
+    'demo': [
+        # '2021_1120_1616',
+        # '2021_1120_1618',
+        '2021_1120_1632',
+        '2021_1120_1634',
+        '2022_0203_1428',
+        '2022_0203_1439',
+        '2022_0203_1441',
+        '2022_0203_1443',
+        '2022_0203_1445',
+        '2022_0203_1512',
+        # '2022_0217_1232',
+        # '2022_0217_1251',
+        # '2022_0217_1307',
+        # '2022_0217_1322'
     ]
 }
 
@@ -180,7 +191,7 @@ class CRUW2022Dataset(data.Dataset):
                 seq_names = [subseq]
             else:
                 raise ValueError('sub-sequence %s not found' % subseq)
-        n_chirps = self.dataset.sensor_cfg.radar_cfg['n_chirps']
+        n_chirps = self.n_chirps
         chirp_ids_sel = self.dataset.sensor_cfg.radar_cfg['chirp_ids']
         radar_win_paths = []
         seq_names_ = []
@@ -211,9 +222,7 @@ class CRUW2022Dataset(data.Dataset):
 
             radar_data_paths = [os.path.join(radar_data_dir, fname) for fname in radar_data_names]
             radar_data_paths = [radar_data_paths[data_id:data_id + n_chirps] for data_id in
-                                range(len(radar_data_paths))]
-            radar_data_paths = [[radar_data_paths[fid][cid] for cid in chirp_ids_sel] for fid in
-                                range(len(radar_data_paths))]
+                                range(0, len(radar_data_paths), n_chirps)]
             n_data = len(radar_data_paths)
             for data_id in range(1, n_data):
                 data_id_end = data_id + self.win_size
@@ -318,6 +327,7 @@ class CRUW2022Dataset(data.Dataset):
                 'h': label_dict['psr']['scale']['z']
             }
         }
+        # TODO: add coordinate translation
         return label_convert
 
     def generate_confmap(self, obj_info_win):
