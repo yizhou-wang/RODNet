@@ -78,10 +78,10 @@ def process_label(raw_root, out_root, split_name, seq_name, frame_id_start, fram
                         'w': label_dict['psr']['scale']['y'],
                         'h': label_dict['psr']['scale']['z']
                     }
-                }
+                }  # TODO: add coordinate translation
                 label_convert_frame.append(label_convert)
 
-        else:  # not label file or no object in this frame
+        else:  # no label file or no object in this frame
             pass
 
         label_convert_win.append(label_convert_frame)
