@@ -39,7 +39,8 @@ def get_dataloader(dataset_name, config_dict, args, dataset):
                                        config_dict=config_dict,
                                        split='train',
                                        noise_channel=args.use_noise_channel,
-                                       old_normalize=args.use_old_norm)
+                                       old_normalize=args.use_old_norm,
+                                       is_cart=args.is_cart)
         dataloader = DataLoader(crdata_train, batch_size, shuffle=True, num_workers=0, collate_fn=cr_collate)
 
     elif dataset_name == 'CRUW2022_3DDet':

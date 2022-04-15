@@ -1,0 +1,55 @@
+{
+  "dataset": "CRUW2022",
+  "camera_cfg": {
+    "image_width": 1440,
+    "image_height": 1080,
+    "frame_rate": 30,
+    "image_folder": "camera/left",
+    "ext": "png"
+  },
+  "radar_cfg": {
+    "ramap_rsize": 200,
+    "ramap_asize": 151,
+    "frame_rate": 30,
+    "crop_num": 3,
+    "n_chirps": 255,
+    "chirp_ids": [
+      0,
+      64,
+      128,
+      192
+    ],
+    "sample_freq": 4e6,
+    "sweep_slope": 21.0017e12,
+    "data_type": "CRUW2022",
+    "chirp_folder": "radar/npy/ra_cart",
+    "ext": "npy",
+    "rr_min": 1.0,
+    "rr_max": 25.0,
+    "ra_min": -90,
+    "ra_max": 90,
+    "xz_dim": [
+      200,
+      151
+    ],
+    "z_max": 30.0
+  },
+  "calib_cfg": {
+    "cam_calib_paths": {},
+    "t_cl2cr": [
+      0.60,
+      0.00,
+      0.00
+    ],
+    "t_cl2rad": [
+      0.28,
+      -0.03,
+      0.09
+    ],
+    "t_cl2lid": [
+      0.48,
+      0.03,
+      0.05
+    ]
+  }
+}

@@ -10,7 +10,7 @@ import torchvision.transforms as T
 from torch.utils import data
 
 from cruw.mapping.coor_transform import cart2pol_ramap
-from cruw.mapping.ops import ra2idx_interpolate
+from cruw.mapping.ops import ra2idx_interpolate, xz2idx_interpolate
 from cruw.mapping.object_types import get_class_id
 
 from rodnet.datasets.transforms import normalize
@@ -76,7 +76,7 @@ LOCAL_LABEL_DIR = '/mnt/disk2/CRUW_2022/CRUW_2022_label'
 class CRUW2022Dataset(data.Dataset):
 
     def __init__(self, data_dir, dataset, config_dict, split, sub_seq=None, is_random_chirp=True,
-                 transform=None, noise_channel=False, old_normalize=False, use_geo_center=False):
+                 transform=None, noise_channel=False, old_normalize=False, use_geo_center=False, is_cart=False):
         """
         Pytorch Dataloader for CR Dataset
         :param data_dir: data directory
@@ -129,6 +129,7 @@ class CRUW2022Dataset(data.Dataset):
             print('using geometric center')
         else:
             print('using nearest point')
+        self.is_cart = is_cart
 
     def __len__(self):
         """Total number of data/label pairs"""
@@ -334,17 +335,17 @@ class CRUW2022Dataset(data.Dataset):
         draw_gaussian = draw_msra_gaussian if self.config_dict['model_cfg']['loss'] == 'mse' else draw_umich_gaussian
         hm_win = np.zeros((self.config_dict['model_cfg']['n_class_train'],
                            self.config_dict['train_cfg']['win_size'],
-                           self.dataset.sensor_cfg.radar_cfg['ramap_asize'],
-                           self.dataset.sensor_cfg.radar_cfg['ramap_rsize']), dtype=np.float32)
+                           self.dataset.sensor_cfg.radar_cfg['ramap_rsize'],
+                           self.dataset.sensor_cfg.radar_cfg['ramap_asize']), dtype=np.float32)
         for win_id in range(self.config_dict['train_cfg']['win_size']):
             labels = obj_info_win[win_id]
             num_objs = len(labels)
             hm = np.zeros((self.config_dict['model_cfg']['n_class_train'],
-                           self.dataset.sensor_cfg.radar_cfg['ramap_asize'],
-                           self.dataset.sensor_cfg.radar_cfg['ramap_rsize']), dtype=np.float32)
+                           self.dataset.sensor_cfg.radar_cfg['ramap_rsize'],
+                           self.dataset.sensor_cfg.radar_cfg['ramap_asize']), dtype=np.float32)
 
             for k in range(num_objs):
-                ct, cls_id, w = self.convert_ann_to_grid(labels[k])
+                ct, cls_id, w = self.convert_ann_to_grid(labels[k], cart=self.is_cart)
                 if w > 0:
                     radius = 2 * gaussian_radius((w, w))
                     radius = max(6, int(radius))
@@ -354,26 +355,33 @@ class CRUW2022Dataset(data.Dataset):
             hm_win[:, win_id, :, :] = hm
         return hm_win
 
-    def convert_ann_to_grid(self, ann_dict):
+    def convert_ann_to_grid(self, ann_dict, cart=False):
         x = ann_dict['loc3d']['x']
         z = ann_dict['loc3d']['z']
         rng, agl = cart2pol_ramap(x, z)
 
-        if self.use_geo_center:
-            # use geometric center
-            # print('using geometric center')
-            rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
+        if cart:
+            x_id, z_id = xz2idx_interpolate(x, z, x_grid=self.dataset.xz_grid[0], z_grid=self.dataset.xz_grid[1])
+            x_id = int(np.round(x_id))
+            z_id = int(np.round(z_id))
+            ct = [x_id, z_id]
 
         else:
-            # use nearest center
-            # print('using nearest center')
-            rrw = max(ann_dict['dim3d']['l'], ann_dict['dim3d']['w'])
-            rng -= rrw / 4
-            rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
+            if self.use_geo_center:
+                # use geometric center
+                # print('using geometric center')
+                rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
 
-        rng_id = int(np.round(rng_id))
-        agl_id = int(np.round(agl_id))
-        ct = [agl_id, rng_id]
+            else:
+                # use nearest center
+                # print('using nearest center')
+                rrw = max(ann_dict['dim3d']['l'], ann_dict['dim3d']['w'])
+                rng -= rrw / 4
+                rng_id, agl_id = ra2idx_interpolate(rng, agl, self.dataset.range_grid, self.dataset.angle_grid)
+
+            rng_id = int(np.round(rng_id))
+            agl_id = int(np.round(agl_id))
+            ct = [agl_id, rng_id]
 
         if type(ann_dict['obj_type']) == str:
             cls_id = get_class_id(ann_dict['obj_type'].lower(), self.dataset.object_cfg.classes)
@@ -388,12 +396,15 @@ class CRUW2022Dataset(data.Dataset):
             return ct, cls_id, -1
 
         rrw = max(ann_dict['dim3d']['l'], ann_dict['dim3d']['w'])
-        half_width_view_angle = np.arcsin(rrw / 2 / rng)
-        rid1, aid1 = ra2idx_interpolate(rng, agl - half_width_view_angle,
-                                        self.dataset.range_grid,
-                                        self.dataset.angle_grid)
-        rid2, aid2 = ra2idx_interpolate(rng, agl + half_width_view_angle,
-                                        self.dataset.range_grid,
-                                        self.dataset.angle_grid)
-        rrw_pixel = aid2 - aid1
-        return ct, cls_id, rrw_pixel
+        if cart:
+            rrw = rrw  # unit: meter in cart coordinates
+        else:
+            half_width_view_angle = np.arcsin(rrw / 2 / rng)
+            rid1, aid1 = ra2idx_interpolate(rng, agl - half_width_view_angle,
+                                            self.dataset.range_grid,
+                                            self.dataset.angle_grid)
+            rid2, aid2 = ra2idx_interpolate(rng, agl + half_width_view_angle,
+                                            self.dataset.range_grid,
+                                            self.dataset.angle_grid)
+            rrw = aid2 - aid1  # unit: pixel in polar coordinates
+        return ct, cls_id, rrw

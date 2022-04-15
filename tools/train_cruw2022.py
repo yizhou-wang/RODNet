@@ -25,6 +25,7 @@ def parse_args():
     # parser.add_argument('--data_dir', type=str, default='./data/', help='directory to the prepared data')
     parser.add_argument('--log_dir', type=str, default='./checkpoints/', help='directory to save trained model')
     parser.add_argument('--resume_from', type=str, default=None, help='path to the trained model')
+    parser.add_argument('--is_cart', action='store_true', help='use radar data in Cartesian coordinates')
 
     parser = parse_cfgs(parser)
     args = parser.parse_args()
