@@ -321,10 +321,10 @@ class CRUW2022Dataset(data.Dataset):
     def convert_label(self, label_dict):
         label_convert = {
             'obj_type': label_dict['obj_type'],
-            'loc3d': {
-                'x': -label_dict['psr']['position']['y'],
-                'y': -label_dict['psr']['position']['z'],
-                'z': label_dict['psr']['position']['x']
+            'loc3d': {  # with coordinate translation
+                'x': -label_dict['psr']['position']['y'] + self.dataset.calib_cfg['t_rad2lid'][0],
+                'y': -label_dict['psr']['position']['z'] + self.dataset.calib_cfg['t_rad2lid'][1],
+                'z': label_dict['psr']['position']['x'] + self.dataset.calib_cfg['t_rad2lid'][2]
             },
             'dim3d': {
                 'l': label_dict['psr']['scale']['x'],
@@ -332,7 +332,6 @@ class CRUW2022Dataset(data.Dataset):
                 'h': label_dict['psr']['scale']['z']
             }
         }
-        # TODO: add coordinate translation
         return label_convert
 
     def generate_confmap(self, obj_info_win):

@@ -58,7 +58,7 @@ def process_radar_data(raw_root, out_root, split_name, seq_name, frame_id_start,
     np.save(npy_save_path, radar_win)
 
 
-def process_label(raw_root, out_root, split_name, seq_name, frame_id_start, frame_id_end):
+def process_label(raw_root, out_root, split_name, seq_name, frame_id_start, frame_id_end, cruw):
     label_convert_win = []
     for fid, frame_id in enumerate(range(frame_id_start, frame_id_end)):
         label_path = os.path.join(raw_root, seq_name, 'label', '%06d.json' % frame_id)
@@ -68,10 +68,10 @@ def process_label(raw_root, out_root, split_name, seq_name, frame_id_start, fram
             for label_dict in label_dicts:
                 label_convert = {
                     'obj_type': label_dict['obj_type'],
-                    'loc3d': {
-                        'x': -label_dict['psr']['position']['y'],
-                        'y': -label_dict['psr']['position']['z'],
-                        'z': label_dict['psr']['position']['x']
+                    'loc3d': {  # with coordinate translation
+                        'x': -label_dict['psr']['position']['y'] + cruw.dataset.calib_cfg['t_rad2lid'][0],
+                        'y': -label_dict['psr']['position']['z'] + cruw.dataset.calib_cfg['t_rad2lid'][1],
+                        'z': label_dict['psr']['position']['x'] + cruw.dataset.calib_cfg['t_rad2lid'][2]
                     },
                     'dim3d': {
                         'l': label_dict['psr']['scale']['x'],
@@ -110,7 +110,7 @@ def process_split(raw_root, out_root, split_name, split_frames, cruw, win_size=1
         process_radar_data(raw_root, out_root, split_name, seq_name, frame_id_start, frame_id_end,
                            radar_dim, chirp_ids)
 
-        process_label(raw_root, out_root, split_name, seq_name, frame_id_start, frame_id_end)
+        process_label(raw_root, out_root, split_name, seq_name, frame_id_start, frame_id_end, cruw)
 
 
 if __name__ == '__main__':
