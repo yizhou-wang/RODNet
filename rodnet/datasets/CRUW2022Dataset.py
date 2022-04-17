@@ -156,12 +156,16 @@ class CRUW2022Dataset(data.Dataset):
                 dtype=np.float32)
             for wid, radar_paths_frame in enumerate(radar_paths):
                 for cid, radar_path in enumerate(radar_paths_frame):
-                    radar_win[wid, cid, :, :, :] = np.load(radar_path)
+                    radar_chirp = np.load(radar_path)
+                    radar_chirp_rsize, radar_chirp_asize, radar_chirp_csize = radar_chirp.shape
+                    radar_win[wid, cid, :radar_chirp_rsize, :radar_chirp_asize, :radar_chirp_csize] = radar_chirp
         else:
             radar_win = np.zeros((self.win_size, radar_configs['ramap_rsize'], radar_configs['ramap_asize'], 2),
                                  dtype=np.float32)
             for wid, radar_path in enumerate(radar_paths):
-                radar_win[wid, :, :, :] = np.load(radar_path)
+                radar_chirp = np.load(radar_path)
+                radar_chirp_rsize, radar_chirp_asize, radar_chirp_csize = radar_chirp.shape
+                radar_win[wid, :radar_chirp_rsize, :radar_chirp_asize, :radar_chirp_csize] = radar_chirp
 
         radar_win = self.transform_radar_data(radar_win, old_normalize=self.old_normalize)
         data_dict['radar_data'] = radar_win

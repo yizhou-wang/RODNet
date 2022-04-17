@@ -9,7 +9,7 @@
   },
   "radar_cfg": {
     "ramap_rsize": 200,
-    "ramap_asize": 151,
+    "ramap_asize": 152,
     "frame_rate": 30,
     "crop_num": 3,
     "n_chirps": 255,
