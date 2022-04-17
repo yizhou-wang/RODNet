@@ -351,10 +351,16 @@ class CRUW2022Dataset(data.Dataset):
             for k in range(num_objs):
                 ct, cls_id, w = self.convert_ann_to_grid(labels[k], cart=self.is_cart)
                 if w > 0:
-                    radius = 2 * gaussian_radius((w, w))
-                    radius = max(6, int(radius))
-                    radius = 6 if self.config_dict['model_cfg']['loss'] == 'mse' else radius
-                    radius = int(np.ceil(radius))
+                    if self.is_cart:
+                        radius = 10 * gaussian_radius((w, w))
+                        radius = max(10, int(radius))
+                        radius = 10 if self.config_dict['model_cfg']['loss'] == 'mse' else radius
+                        radius = int(np.ceil(radius))
+                    else:
+                        radius = 2 * gaussian_radius((w, w))
+                        radius = max(6, int(radius))
+                        radius = 6 if self.config_dict['model_cfg']['loss'] == 'mse' else radius
+                        radius = int(np.ceil(radius))
                     draw_gaussian(hm[cls_id], ct, radius)
             hm_win[:, win_id, :, :] = hm
         return hm_win
