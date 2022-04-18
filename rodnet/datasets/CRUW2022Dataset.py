@@ -322,9 +322,9 @@ class CRUW2022Dataset(data.Dataset):
         label_convert = {
             'obj_type': label_dict['obj_type'],
             'loc3d': {  # with coordinate translation
-                'x': -label_dict['psr']['position']['y'] + self.dataset.calib_cfg['t_rad2lid'][0],
-                'y': -label_dict['psr']['position']['z'] + self.dataset.calib_cfg['t_rad2lid'][1],
-                'z': label_dict['psr']['position']['x'] + self.dataset.calib_cfg['t_rad2lid'][2]
+                'x': -label_dict['psr']['position']['y'] + self.dataset.sensor_cfg.calib_cfg['t_rad2lid'][0],
+                'y': -label_dict['psr']['position']['z'] + self.dataset.sensor_cfg.calib_cfg['t_rad2lid'][1],
+                'z': label_dict['psr']['position']['x'] + self.dataset.sensor_cfg.calib_cfg['t_rad2lid'][2]
             },
             'dim3d': {
                 'l': label_dict['psr']['scale']['x'],
