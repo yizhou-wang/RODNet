@@ -69,9 +69,9 @@ def process_label(raw_root, out_root, split_name, seq_name, frame_id_start, fram
                 label_convert = {
                     'obj_type': label_dict['obj_type'],
                     'loc3d': {  # with coordinate translation
-                        'x': -label_dict['psr']['position']['y'] + cruw.dataset.calib_cfg['t_rad2lid'][0],
-                        'y': -label_dict['psr']['position']['z'] + cruw.dataset.calib_cfg['t_rad2lid'][1],
-                        'z': label_dict['psr']['position']['x'] + cruw.dataset.calib_cfg['t_rad2lid'][2]
+                        'x': -label_dict['psr']['position']['y'] + cruw.dataset.sensor_cfg.calib_cfg['t_rad2lid'][0],
+                        'y': -label_dict['psr']['position']['z'] + cruw.dataset.sensor_cfg.calib_cfg['t_rad2lid'][1],
+                        'z': label_dict['psr']['position']['x'] + cruw.dataset.sensor_cfg.calib_cfg['t_rad2lid'][2]
                     },
                     'dim3d': {
                         'l': label_dict['psr']['scale']['x'],
