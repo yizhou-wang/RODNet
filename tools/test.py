@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
     data_root = dataset_configs['data_root']
     if not args.demo:
-        seq_names = sorted(os.listdir(os.path.join(data_root, dataset_configs['test']['subdir'])))
+        seq_names = sorted(os.listdir(os.path.join(data_root, dataset_configs['train']['subdir'])))
     else:
         seq_names = sorted(os.listdir(os.path.join(data_root, dataset_configs['demo']['subdir'])))
     print(seq_names)
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     for subset in seq_names:
         print(subset)
         if not args.demo:
-            crdata_test = CRDataset(data_dir=args.data_dir, dataset=dataset, config_dict=config_dict, split='test',
+            crdata_test = CRDataset(data_dir=args.data_dir, dataset=dataset, config_dict=config_dict, split='train',
                                     noise_channel=args.use_noise_channel, subset=subset, is_random_chirp=False)
         else:
             crdata_test = CRDataset(data_dir=args.data_dir, dataset=dataset, config_dict=config_dict, split='demo',
