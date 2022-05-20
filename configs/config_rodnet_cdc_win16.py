@@ -18,7 +18,7 @@ dataset_cfg = dict(
     ),
     demo=dict(
         subdir='demo',
-        seqs=[],
+        # seqs=[],
     ),
 )
 
