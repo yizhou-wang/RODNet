@@ -2,6 +2,8 @@ import os
 import time
 import random
 import pickle
+import traceback
+
 import numpy as np
 from tqdm import tqdm
 
@@ -165,6 +167,7 @@ class CRDataset(data.Dataset):
             data_dict['end_frame'] = data_id + self.win_size * self.step - 1
 
         except:
+            print(f"\033[1;36m {traceback.format_exc()}\033[0m")
             # in case load npy fail
             data_dict['status'] = False
             if not os.path.exists('./tmp'):

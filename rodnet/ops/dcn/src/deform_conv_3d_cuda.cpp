@@ -71,26 +71,26 @@ void shape_check(at::Tensor input, at::Tensor offset, at::Tensor *gradOutput,
                  at::Tensor weight, int kH, int kW, int kT, int dH, int dW, int dT,
                  int padH, int padW, int padT, int dilationH, int dilationW, int dilationT,
                  int group, int deformable_group) {
-  AT_CHECK(weight.ndimension() == 5,
+  TORCH_CHECK(weight.ndimension() == 5,
            "5D weight tensor (nOutputPlane,nInputPlane,kH,kW) expected, "
            "but got: %s",
            weight.ndimension());
 
-  AT_CHECK(weight.is_contiguous(), "weight tensor has to be contiguous");
+  TORCH_CHECK(weight.is_contiguous(), "weight tensor has to be contiguous");
 
-  AT_CHECK(kW > 0 && kH > 0 && kT > 0,
+  TORCH_CHECK(kW > 0 && kH > 0 && kT > 0,
            "kernel size should be greater than zero, but got kH: %d kW: %d kT: %d", kH,
            kW, kT);
 
-  AT_CHECK((weight.size(2) == kT && weight.size(3) == kH && weight.size(4) == kW),
+  TORCH_CHECK((weight.size(2) == kT && weight.size(3) == kH && weight.size(4) == kW),
            "kernel size should be consistent with weight, ",
            "but got kH: %d kW: %d kT: %d weight.size(2): %d, weight.size(3): %d, weight.size(4): %d", kH,
            kW, kT, weight.size(2), weight.size(3), weight.size(4));
 
-  AT_CHECK(dW > 0 && dH > 0 && dT > 0,
+  TORCH_CHECK(dW > 0 && dH > 0 && dT > 0,
            "stride should be greater than zero, but got dH: %d dW: %d dT: %d", dH, dW, dT);
 
-  AT_CHECK(
+  TORCH_CHECK(
       dilationW > 0 && dilationH > 0 && dilationT > 0,
       "dilation should be greater than 0, but got dilationH: %d dilationW: %d dilationT: %d",
       dilationH, dilationW, dilationT);
@@ -108,7 +108,7 @@ void shape_check(at::Tensor input, at::Tensor offset, at::Tensor *gradOutput,
     dimw++;
   }
 
-  AT_CHECK(ndim == 4 || ndim == 5, "4D or 5D input tensor expected but got: %s",
+  TORCH_CHECK(ndim == 4 || ndim == 5, "4D or 5D input tensor expected but got: %s",
            ndim);
 
   long nInputPlane = weight.size(1) * group;
@@ -123,7 +123,7 @@ void shape_check(at::Tensor input, at::Tensor offset, at::Tensor *gradOutput,
   long outputTime =
       (inputTime + 2 * padT - (dilationT * (kT - 1) + 1)) / dT + 1;
 
-  AT_CHECK(nInputPlane % deformable_group == 0,
+  TORCH_CHECK(nInputPlane % deformable_group == 0,
            "input channels must divide deformable group size");
 
   if (outputWidth < 1 || outputHeight < 1)
@@ -133,27 +133,27 @@ void shape_check(at::Tensor input, at::Tensor offset, at::Tensor *gradOutput,
         nInputPlane, inputHeight, inputWidth, nOutputPlane, outputHeight,
         outputWidth);
 
-  AT_CHECK(input.size(1) == nInputPlane,
+  TORCH_CHECK(input.size(1) == nInputPlane,
            "invalid number of input planes, expected: %d, but got: %d",
            nInputPlane, input.size(1));
 
-  AT_CHECK((inputHeight >= kH && inputWidth >= kW && inputTime >= kT),
+  TORCH_CHECK((inputHeight >= kH && inputWidth >= kW && inputTime >= kT),
            "input data is smaller than kernel");
 
-  AT_CHECK((offset.size(2) == outputTime && offset.size(3) == outputHeight && offset.size(4) == outputWidth),
+  TORCH_CHECK((offset.size(2) == outputTime && offset.size(3) == outputHeight && offset.size(4) == outputWidth),
            "invalid spatial size of offset, expected time: %d height: %d width: %d, but "
            "got time: %d height: %d width: %d",
            outputTime, outputHeight, outputWidth, offset.size(2), offset.size(3), offset.size(4));
 
-  AT_CHECK((offset.size(1) == deformable_group * 2 * kH * kW * kT),
+  TORCH_CHECK((offset.size(1) == deformable_group * 2 * kH * kW * kT),
            "invalid number of channels of offset");
 
   if (gradOutput != NULL) {
-    AT_CHECK(gradOutput->size(dimf) == nOutputPlane,
+    TORCH_CHECK(gradOutput->size(dimf) == nOutputPlane,
              "invalid number of gradOutput planes, expected: %d, but got: %d",
              nOutputPlane, gradOutput->size(dimf));
 
-    AT_CHECK((gradOutput->size(dimt) == outputTime &&
+    TORCH_CHECK((gradOutput->size(dimt) == outputTime &&
               gradOutput->size(dimh) == outputHeight &&
               gradOutput->size(dimw) == outputWidth),
              "invalid size of gradOutput, expected time: %d height: %d width: %d, but "
@@ -214,7 +214,7 @@ int deform_conv_forward_cuda(at::Tensor input, at::Tensor weight,
   long outputTime =
       (inputTime + 2 * padT - (dilationT * (kT - 1) + 1)) / dT + 1;
 
-  AT_CHECK((offset.size(0) == batchSize), "invalid batch size of offset");
+  TORCH_CHECK((offset.size(0) == batchSize), "invalid batch size of offset");
 
   output = output.view({batchSize / im2col_step, im2col_step, nOutputPlane,
                         outputTime, outputHeight, outputWidth});
@@ -341,7 +341,7 @@ int deform_conv_backward_input_cuda(at::Tensor input, at::Tensor offset,
   long outputTime =
       (inputTime + 2 * padT - (dilationT * (kT - 1) + 1)) / dT + 1;
 
-  AT_CHECK((offset.size(0) == batchSize), 3, "invalid batch size of offset");
+  TORCH_CHECK((offset.size(0) == batchSize), 3, "invalid batch size of offset");
   gradInput = gradInput.view({batchSize, nInputPlane, inputTime, inputHeight, inputWidth});
   columns = at::zeros(
       {nInputPlane * kW * kH * kT, im2col_step * outputTime * outputHeight * outputWidth},
@@ -463,7 +463,7 @@ int deform_conv_backward_parameters_cuda(
   long outputTime =
       (inputTime + 2 * padT - (dilationT * (kT - 1) + 1)) / dT + 1;
 
-  AT_CHECK((offset.size(0) == batchSize), "invalid batch size of offset");
+  TORCH_CHECK((offset.size(0) == batchSize), "invalid batch size of offset");
 
   columns = at::zeros(
       {nInputPlane * kW * kH * kT, im2col_step * outputHeight * outputWidth * outputTime},
@@ -543,8 +543,8 @@ void modulated_deform_conv_cuda_forward(
     const int pad_h, const int pad_w, const int dilation_h,
     const int dilation_w, const int group, const int deformable_group,
     const bool with_bias) {
-  AT_CHECK(input.is_contiguous(), "input tensor has to be contiguous");
-  AT_CHECK(weight.is_contiguous(), "weight tensor has to be contiguous");
+  TORCH_CHECK(input.is_contiguous(), "input tensor has to be contiguous");
+  TORCH_CHECK(weight.is_contiguous(), "weight tensor has to be contiguous");
   at::DeviceGuard guard(input.device());
 
   const int batch = input.size(0);
@@ -625,8 +625,8 @@ void modulated_deform_conv_cuda_backward(
     int kernel_h, int kernel_w, int stride_h, int stride_w, int pad_h,
     int pad_w, int dilation_h, int dilation_w, int group, int deformable_group,
     const bool with_bias) {
-  AT_CHECK(input.is_contiguous(), "input tensor has to be contiguous");
-  AT_CHECK(weight.is_contiguous(), "weight tensor has to be contiguous");
+  TORCH_CHECK(input.is_contiguous(), "input tensor has to be contiguous");
+  TORCH_CHECK(weight.is_contiguous(), "weight tensor has to be contiguous");
   at::DeviceGuard guard(input.device());
 
   const int batch = input.size(0);
