@@ -40,6 +40,7 @@ Please cite our paper if this repository is helpful for your research:
 (Verify you are at CUDA 10.X)
 
 docker build -t rodnet-docker ./
+
 docker run --rm -it --gpus all -v /:/workspace/ -p 52713:52713 --name rodnet-docker rodnet-docker bash
 
 Run inside your docker
