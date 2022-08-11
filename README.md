@@ -37,44 +37,16 @@ Please cite our paper if this repository is helpful for your research:
 ```
 
 ## Installation
+(Verify you are at CUDA 10.X)
 
-Clone RODNet code.
-```commandline
-cd $RODNET_ROOT
-git clone https://github.com/yizhou-wang/RODNet.git
-```
+docker build -t rodnet-docker ./
+docker run --rm -it --gpus all -v /:/workspace/ -p 52713:52713 --name rodnet-docker rodnet-docker bash
 
-Create a conda environment for RODNet. Tested under Python 3.6, 3.7, 3.8.
-```commandline
-conda create -n rodnet python=3.* -y
+Run inside your docker
+./install_rodnet
 conda activate rodnet
-```
 
-Install pytorch.
-**Note:** If you are using Temporal Deformable Convolution (TDC), we only tested under `pytorch<=1.4` and `CUDA=10.1`. 
-Without TDC, you should be able to choose the latest versions. 
-If you met some issues with environment, feel free to raise an issue.
-```commandline
-conda install pytorch=1.4 torchvision cudatoolkit=10.1 -c pytorch  # if using TDC
-# OR
-conda install pytorch torchvision cudatoolkit=10.1 -c pytorch  # if not using TDC
-```
-
-Install `cruw-devkit` package. 
-Please refer to [`cruw-devit`](https://github.com/yizhou-wang/cruw-devkit) repository for detailed instructions.
-```commandline
-git clone https://github.com/yizhou-wang/cruw-devkit.git
-cd cruw-devkit
-pip install .
-cd ..
-```
-
-Setup RODNet package.
-```commandline
-pip install -e .
-```
-**Note:** If you are not using TDC, you can rename script `setup_wo_tdc.py` as `setup.py`, and run the above command. 
-This should allow you to use the latest cuda and pytorch version. 
+Thats it.
 
 ## Prepare data for RODNet
 
