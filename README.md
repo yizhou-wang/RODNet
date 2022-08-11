@@ -36,7 +36,7 @@ Please cite our paper if this repository is helpful for your research:
 }
 ```
 
-## Installation
+## Installation and Download of Data
 (Verify you are at CUDA 10.X)
 
 docker build -t rodnet-docker ./
