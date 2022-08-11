@@ -45,6 +45,7 @@ docker run --rm -it --gpus all -v /:/workspace/ -p 52713:52713 --name rodnet-doc
 
 Run inside your docker
 ./install_rodnet
+
 conda activate rodnet
 
 Thats it.
